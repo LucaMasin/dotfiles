@@ -2,7 +2,8 @@
 Repository of configuration files for Linux systems
 
 ## Prerequisites
-Stow
+stow
+git
 
 ## Git repository
 https://github.com/LucaMasin/dotfiles.git

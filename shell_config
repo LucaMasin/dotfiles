@@ -1,6 +1,7 @@
 # Custom shell configuration --------------------------------------------
 
 # Shortcuts for common commands
+alias ls='ls --color'
 alias c="clear"
 alias lsa="ls -lah"
 alias ll='ls -l'

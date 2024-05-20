@@ -1,4 +1,4 @@
-ech "Leave default file path and press enter"
+echo "Leave default file path and press enter"
 ssh-keygen -t ed25519 -C "luca.mas93@gmail.com"
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
