@@ -1,0 +1,12 @@
+# Custom shell configuration --------------------------------------------
+
+# Shortcuts for common commands
+alias c="clear"
+alias lsa="ls -lah"
+alias ll='ls -l'
+alias h='history'
+
+# Ping count
+alias ping='ping -c 5'
+
+# -----------------------------------------------------------------------
