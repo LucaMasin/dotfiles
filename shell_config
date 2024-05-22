@@ -13,4 +13,8 @@ alias ping='ping -c 5'
 # Find in local directory
 alias fld="ls -lah | grep"
 
+
+# Expose programs
+export PATH="$PATH:/opt/nvim/"
+
 # -----------------------------------------------------------------------
