@@ -7,6 +7,12 @@ alias lsa="ls -lah"
 alias ll='ls -l'
 alias h='history'
 
+# Conda shortcuts
+alias ca="conda activate"
+alias cd="conda deactivate"
+alias cl="conda list"
+alias cel="conda env list"
+
 # Ping count
 alias ping='ping -c 5'
 
@@ -16,5 +22,14 @@ alias fld="ls -lah | grep"
 
 # Expose programs
 export PATH="$PATH:/opt/nvim/"
+
+
+# Check if nvim is available
+if command -v nvim &> /dev/null
+then
+    # If nvim is available, alias it to vim
+    alias vim='nvim'
+    alias vi='nvim'
+fi
 
 # -----------------------------------------------------------------------
