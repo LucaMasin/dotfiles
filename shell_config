@@ -9,7 +9,6 @@ alias h='history'
 
 # Conda shortcuts
 alias ca="conda activate"
-alias cd="conda deactivate"
 alias cl="conda list"
 alias cel="conda env list"
 
@@ -31,5 +30,13 @@ then
     alias vim='nvim'
     alias vi='nvim'
 fi
+
+# # Setup zoxide
+# if command -v zoxide &> /dev/null
+# then
+#     # If zoxide is available, setup it
+#     eval "$(zoxide init zsh)"
+#     alias cd="z"
+# fi
 
 # -----------------------------------------------------------------------
