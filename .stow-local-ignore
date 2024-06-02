@@ -23,3 +23,5 @@ _darcs
 ^/COPYING
 
 scripts
+shell_config
+zsh_config
