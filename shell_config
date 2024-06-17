@@ -50,6 +50,7 @@ then
     # If zoxide is available, setup it
     echo "Setting up zoxide"
     eval "$(zoxide init zsh)"
+    echo "Alias cd to z"
     alias cd="z"
 fi
 
