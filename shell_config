@@ -21,7 +21,14 @@ alias fld="ls -lah | grep"
 
 
 # Expose programs
-export PATH="$PATH:/opt/nvim/"
+# Check if /opt/nvim/ is not already in the PATH
+if [[ ":$PATH:" != *":/opt/nvim/:"* ]]; then
+    export PATH="$PATH:/opt/nvim/"
+fi
+# Check if $HOME/.local/bin/ is not already in the PATH
+if [[ ":$PATH:" != *":$HOME/.local/bin/:"* ]]; then
+    export PATH="$PATH:$HOME/.local/bin/"
+fi
 
 # Check if nvim is available
 if command -v nvim &> /dev/null
@@ -41,6 +48,7 @@ then
     fi
 
     # If zoxide is available, setup it
+    echo "Setting up zoxide"
     eval "$(zoxide init zsh)"
     alias cd="z"
 fi
