@@ -24,4 +24,5 @@ _darcs
 
 scripts
 shell_config
+bash_config
 zsh_config

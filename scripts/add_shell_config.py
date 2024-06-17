@@ -3,10 +3,12 @@ import subprocess
 
 # Hardcoded path to the configuration file you want to source
 config_file = "../shell_config"
+bash_config_file = "../bash_config"
 zsh_config_file = "../zsh_config"
 
 # Resolve the configuration file path to an absolute path
 config_file = os.path.abspath(config_file)
+bash_config_file = os.path.abspath(bash_config_file)
 zsh_config_file = os.path.abspath(zsh_config_file)
 
 # Check if the configuration file exists
@@ -28,6 +30,7 @@ shell = os.environ.get("SHELL", "")
 if "bash" in shell:
     config_path = os.path.expanduser("~/.bashrc")
     source_command = f"bash -c 'source {config_path}'"
+    source_line = f"source {bash_config_file}\n" + source_line
 elif "zsh" in shell:
     config_path = os.path.expanduser("~/.zshrc")
     source_command = f"zsh -c 'source {config_path}'"
