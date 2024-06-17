@@ -3,15 +3,22 @@ Repository of configuration files for Linux systems
 
 ## Prerequisites
 ### Required
-stow
-git
+- Stow
+- Git
+- [Starship](https://starship.rs/guide/)
 
 ### Optional
-zsh
-neovim
-zoxide
-tmux
+- Zsh
+- [Neovim](https://github.com/neovim/neovim/blob/master/INSTALL.md)
+- [Zoxide](https://github.com/ajeetdsouza/zoxide)
+- Tmux
 
+### For graphical environment
+- i3
+- polybar
+- alacritty
+- rofi
+- picom
 
 ## Git repository
 https://github.com/LucaMasin/dotfiles.git
