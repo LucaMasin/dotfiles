@@ -22,7 +22,6 @@ alias fld="ls -lah | grep"
 
 # Expose programs
 export PATH="$PATH:/opt/nvim/"
-export PATH="$PATH:~/.local/bin/"
 
 # Check if nvim is available
 if command -v nvim &> /dev/null
