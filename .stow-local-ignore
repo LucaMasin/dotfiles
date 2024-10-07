@@ -22,7 +22,7 @@ _darcs
 ^/LICENSE.*
 ^/COPYING
 
-scripts
+setup_scripts
 shell_config
 bash_config
 zsh_config
