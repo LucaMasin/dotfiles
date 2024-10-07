@@ -6,6 +6,7 @@ alias c="clear"
 alias lsa="ls -lah"
 alias ll='ls -l'
 alias h='history'
+alias ts='~/scripts/tmux-sessionizer.sh'
 
 # Conda shortcuts
 alias ca="conda activate"
