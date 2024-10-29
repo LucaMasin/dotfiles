@@ -49,7 +49,18 @@ then
     fi
 
     # If zoxide is available, setup it
-    eval "$(zoxide init zsh)"
+    # eval "$(zoxide init zsh)"
+
+    # Setup zoxide for the correct shell
+    if command -v zoxide &> /dev/null; then
+        if [[ $SHELL == *"/bash"* ]]; then
+            eval "$(zoxide init bash)"
+        elif [[ $SHELL == *"/zsh"* ]]; then
+            eval "$(zoxide init zsh)"
+        fi
+    fi
+
+    # Alias z to zoxide
     alias cd="z"
 fi
 
