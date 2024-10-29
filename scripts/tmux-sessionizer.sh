@@ -3,7 +3,7 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    selected=$(find ~/python ~/docker ~/scripts ~/data ~/scratch -mindepth 1 -maxdepth 1 -type d | fzf)
+    selected=$(find ~/python ~/docker ~/scripts ~/data ~/scratch -mindepth 1 -maxdepth 1 \( -type d -o -type l \) | fzf)
 fi
 
 if [[ -z $selected ]]; then
