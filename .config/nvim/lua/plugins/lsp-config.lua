@@ -173,6 +173,16 @@ return { -- LSP Configuration & Plugins
 			},
 
 			ruff = {},
+
+			clangd = {
+				-- cmd = { "clangd", unpack(require("custom.clangd").flags) },
+				-- TODO: Could include cmd, but not sure those were all relevant flags.
+				--    looks like something i would have added while i was floundering
+				init_options = { clangdFileStatus = true },
+
+				filetypes = { "c" },
+			},
+
 			-- pyright = {},
 			-- rust_analyzer = {},
 			-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
