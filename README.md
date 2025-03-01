@@ -12,6 +12,7 @@ Repository of configuration files for Linux systems
 - [Neovim](https://github.com/neovim/neovim/blob/master/INSTALL.md)
 - [Zoxide](https://github.com/ajeetdsouza/zoxide)
 - Tmux
+- fzf
 
 ### For graphical environment
 - i3

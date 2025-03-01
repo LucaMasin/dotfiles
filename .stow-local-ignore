@@ -26,3 +26,4 @@ setup_scripts
 shell_config
 bash_config
 zsh_config
+auto_install.sh
