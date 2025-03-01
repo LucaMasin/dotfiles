@@ -13,9 +13,9 @@ echo "Installing gh"
 gh auth login
 
 echo "Clone dotfiles"
-cd ~
+cd $HOME
 gh repo clone LucaMasin/dotfiles
 
 echo "Starting auto install"
-cd ~/dotfiles
+cd $HOME/dotfiles
 sh ./setup_scripts/run_config_scripts.sh

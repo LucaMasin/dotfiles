@@ -1,11 +1,6 @@
 cd "$(dirname "$0")"
 
-if command -v python &> /dev/null
-then
-    PYCMD=python
-else
-    PYCMD=python3
-fi
+PYCMD=python3
 
 for file in *.py
 do

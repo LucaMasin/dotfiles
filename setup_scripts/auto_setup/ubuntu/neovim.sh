@@ -4,8 +4,8 @@ echo "Installing neovim"
 
 sudo apt-get install ninja-build gettext cmake curl build-essential -y
 
-mkdir -p ~/repos
-cd ~/repos
+mkdir -p $HOME/repos
+cd $HOME/repos
 
 git clone https://github.com/neovim/neovim
 cd neovim

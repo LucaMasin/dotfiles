@@ -4,5 +4,5 @@ echo "Installing stow"
 
 sudo apt install stow -y
 
-cd ~/dotfiles
-stow -t ~ .
+cd $HOME/dotfiles
+stow -t $HOME .
