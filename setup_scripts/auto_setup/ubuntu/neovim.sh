@@ -2,7 +2,7 @@
 
 echo "Installing neovim"
 
-sudo apt-get install ninja-build gettext cmake curl build-essential unzip -y
+sudo apt-get install ninja-build gettext cmake curl build-essential unzip python3-venv -y
 
 mkdir -p $HOME/repos
 cd $HOME/repos
