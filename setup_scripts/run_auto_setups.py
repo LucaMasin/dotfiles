@@ -32,8 +32,10 @@ def get_distro_name():
 if __name__ == "__main__":
     distro_name = get_distro_name()
 
-    setup_scripts = [file for file in os.listdir(f"setup_scripts/auto_setup/{distro_name}") if file.endswith(".sh")]
+    setup_scripts = [file for file in os.listdir(f"$HOME/dotfiles/setup_scripts/auto_setup/{distro_name}") if file.endswith(".sh")]
     setup_scripts = sorted(setup_scripts)
     for script in setup_scripts:
         print(f"\nRunning {script}...")
-        os.system(f"bash setup_scripts/auto_setup/{distro_name}/{script}")
+        os.system(
+            f"bash $HOME/dotfiles/setup_scripts/auto_setup/{distro_name}/{script}"
+        )
