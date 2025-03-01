@@ -2,7 +2,7 @@
 
 echo "Installing stow"
 
-# sudo apt install stow -y
+sudo apt install stow -y
 
-# cd ~/dotfiles
-# stow -t ~ .
+cd ~/dotfiles
+stow -t ~ .
