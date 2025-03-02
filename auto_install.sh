@@ -21,4 +21,6 @@ cd $HOME/dotfiles
 
 git checkout shells
 
+touch ~/.zshrc
+
 sh ./setup_scripts/run_config_scripts.sh
