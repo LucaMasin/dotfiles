@@ -19,7 +19,4 @@ gh repo clone LucaMasin/dotfiles
 echo "Starting auto install"
 cd $HOME/dotfiles
 
-# FIXME: Remove this line later
-git checkout autoinstall
-
 sh ./setup_scripts/run_config_scripts.sh
