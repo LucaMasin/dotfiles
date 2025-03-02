@@ -10,52 +10,32 @@ zsh_config_file = "../zsh_config"
 config_file = os.path.abspath(config_file)
 bash_config_file = os.path.abspath(bash_config_file)
 zsh_config_file = os.path.abspath(zsh_config_file)
+# Add sources to the shell configuration files
+bash_config = f"""
+# Custom configuration
+source {bash_config_file}
+source {config_file}
 
-# Check if the configuration file exists
-if not os.path.isfile(config_file):
-    print(f"Error: File {config_file} does not exist.")
-    exit(1)
+"""
+zsh_config = f"""
+# Custom configuration
+source {zsh_config_file}
+source {config_file}
 
-# Print the configuration file contents
-with open(config_file, "r") as file:
-    print(f"Contents of {config_file}:")
-    print(file.read())
-    print("\n")
+"""
 
-# Line to add to shell configuration file
-source_line = f"source {config_file}\n"
+with open(os.path.expanduser("~/.bashrc"), "a") as f:
+    content = f.read()
+    if bash_config not in content:
+        f.write(bash_config)
+        f.write(content)
 
-# Determine the shell and the corresponding config file
-shell = os.environ.get("SHELL", "")
-if "bash" in shell:
-    config_path = os.path.expanduser("~/.bashrc")
-    source_command = f"bash -c 'source {config_path}'"
-    source_line = f"source {bash_config_file}\n" + source_line
-elif "zsh" in shell:
-    config_path = os.path.expanduser("~/.zshrc")
-    source_command = f"zsh -c 'source {config_path}'"
-    source_line = f"source {zsh_config_file}\n" + source_line
-else:
-    print("Unsupported shell. Only bash and zsh are supported.")
-    exit(1)
+with open(os.path.expanduser("~/.zshrc"), "a") as f:
+    content = f.read()
+    if zsh_config not in content:
+        f.write(zsh_config)
+        f.write(content)
 
-# Read the existing lines in the config file
-with open(config_path, "r") as config_file:
-    lines = config_file.readlines()
-
-# Check if the source line is already in the config file
-if source_line in lines:
-    print(f"The source line is already present in {config_path}.")
-else:
-    # Add the source line to the config file
-    with open(config_path, "r") as config_file:
-        existing_content = config_file.read()
-    with open(config_path, "w") as config_file:
-        config_file.write("# Custom configuration\n")
-        config_file.write(source_line)
-        config_file.write(existing_content)
-    print(f"Added the source line to the start of {config_path}.")
-
-# Source the updated config file
-subprocess.run(source_command, shell=True, check=True)
-print(f"Sourced the updated {config_path}.")
+# Source the configuration file in the current shell
+subprocess.run("bash -c 'source ~/.bashrc'", shell=True, check=True)
+subprocess.run("zsh -c 'source ~/.zshrc'", shell=True, check=True)

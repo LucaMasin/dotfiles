@@ -7,7 +7,7 @@ Repository of configuration files for Linux systems
 To automatically configure the environment, run
 
 ``` bash
-sh auto_install.sh
+curl -Ss https://raw.githubusercontent.com/LucaMasin/dotfiles/refs/heads/main/auto_install.sh | sh
 ```
 
 ## Prerequisites

@@ -16,6 +16,8 @@ echo "Clone dotfiles"
 cd $HOME
 gh repo clone LucaMasin/dotfiles
 
+git checkout shells
+
 echo "Starting auto install"
 cd $HOME/dotfiles
 
