@@ -1,5 +1,6 @@
 import os
 import subprocess
+import shutil
 
 # Hardcoded path to the configuration file you want to source
 config_file = "../shell_config"
@@ -23,6 +24,15 @@ source {zsh_config_file}
 source {config_file}
 
 """
+
+if not os.path.exists(bash_config_file):
+    # create empty file
+    with open(bash_config_file, "w") as f:
+        f.write("")
+if not os.path.exists(zsh_config_file):
+    # create empty file
+    with open(zsh_config_file, "w") as f:
+        f.write("")
 
 with open(os.path.expanduser("~/.bashrc"), "a") as f:
     content = f.read()
