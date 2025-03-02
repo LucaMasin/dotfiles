@@ -7,19 +7,19 @@ opacity = 0.9
 size = 10.0
 
 [font.normal]
-family = "JetBrainsMono NL Nerd Font"
+family = "JetBrainsMono Nerd Font"
 style = "Mono Regular"
 
 [font.bold_italic]
-family = "JetBrainsMono NL Nerd Font"
+family = "JetBrainsMono Nerd Font"
 style = "Mono Bold Italic"
 
 [font.italic]
-family = "JetBrainsMono NL Nerd Font"
+family = "JetBrainsMono Nerd Font"
 style = "Mono Italic"
 
 [font.bold]
-family = "JetBrainsMono NL Nerd Font"
+family = "JetBrainsMono Nerd Font"
 style = "Mono Bold"
 
 # TokyoNight Alacritty Colors
