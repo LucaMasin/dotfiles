@@ -4,23 +4,11 @@
 # from https://gist.github.com/matthewjberger/7dd7e079f282f8138a9dc3b045ebefa0
 
 declare -a fonts=(
-    BitstreamVeraSansMono
-    CodeNewRoman
     DroidSansMono
     FiraCode
     FiraMono
-    Go-Mono
-    Hack
-    Hermit
     JetBrainsMono
-    Meslo
-    Noto
-    Overpass
-    ProggyClean
     RobotoMono
-    SourceCodePro
-    SpaceMono
-    Ubuntu
     UbuntuMono
 )
 
