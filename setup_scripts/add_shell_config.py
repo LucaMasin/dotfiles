@@ -1,4 +1,5 @@
 import os
+from os.path import expanduser, expandvars
 import subprocess
 import shutil
 
@@ -34,17 +35,23 @@ if not os.path.exists(zsh_config_file):
     with open(zsh_config_file, "w") as f:
         f.write("")
 
-with open(os.path.expanduser("~/.bashrc"), "a") as f:
+# Update ~/.bashrc
+bashrc_path = os.path.expanduser("~/.bashrc")
+with open(bashrc_path, "r") as f:
     content = f.read()
-    if bash_config not in content:
-        f.write(bash_config)
-        f.write(content)
 
-with open(os.path.expanduser("~/.zshrc"), "a") as f:
+if bash_config not in content:
+    with open(bashrc_path, "a") as f:
+        f.write(bash_config)
+
+# Update ~/.zshrc
+zshrc_path = os.path.expanduser("~/.zshrc")
+with open(zshrc_path, "r") as f:
     content = f.read()
-    if zsh_config not in content:
+
+if zsh_config not in content:
+    with open(zshrc_path, "a") as f:
         f.write(zsh_config)
-        f.write(content)
 
 # Source the configuration file in the current shell
 subprocess.run("bash -c 'source ~/.bashrc'", shell=True, check=True)
