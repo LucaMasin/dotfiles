@@ -1,9 +1,9 @@
 from pathlib import Path
 import subprocess
-
+import os
 
 def get_folders() -> list[str]:
-    with open(".tsesh.folders", "r") as f:
+    with open(os.path.expanduser("~/scripts/.tsesh.folders"), "r") as f:
         return f.read().splitlines()
 
 

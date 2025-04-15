@@ -20,6 +20,8 @@ alias pingg='ping -c 5 google.com'
 # Find in local directory
 alias fld="ls -lah | grep"
 
+# Own scripts
+alias tsesh='python3 ~/scripts/tsesh.py'
 
 # Expose programs
 # Check if /opt/nvim/ is not already in the PATH
