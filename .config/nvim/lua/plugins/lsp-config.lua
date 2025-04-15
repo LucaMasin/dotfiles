@@ -173,14 +173,16 @@ return { -- LSP Configuration & Plugins
 
 			ruff = {},
 
-			clangd = {
-				-- cmd = { "clangd", unpack(require("custom.clangd").flags) },
-				-- TODO: Could include cmd, but not sure those were all relevant flags.
-				--    looks like something i would have added while i was floundering
-				init_options = { clangdFileStatus = true },
-
-				filetypes = { "c" },
-			},
+			clangd = (function()
+				local executable = vim.fn.executable('clangd')
+				if executable == 1 then
+					return {
+						init_options = { clangdFileStatus = true },
+						filetypes = { "c" },
+					}
+				end
+				return nil
+			end)(),
 
 			-- pyright = {},
 			-- rust_analyzer = {},
