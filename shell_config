@@ -42,22 +42,16 @@ fi
 # Setup zoxide
 if command -v zoxide &> /dev/null
 then
-    if command -v zi &> /dev/null
-    then
-        # If zi is available, alias it to z
+    # Check if zi is an alias before trying to unalias it
+    if alias zi &> /dev/null; then
         unalias zi
     fi
 
-    # If zoxide is available, setup it
-    # eval "$(zoxide init zsh)"
-
     # Setup zoxide for the correct shell
-    if command -v zoxide &> /dev/null; then
-        if [[ $SHELL == *"/bash"* ]]; then
-            eval "$(zoxide init bash)"
-        elif [[ $SHELL == *"/zsh"* ]]; then
-            eval "$(zoxide init zsh)"
-        fi
+    if [[ $SHELL == *"/bash"* ]]; then
+        eval "$(zoxide init bash)"
+    elif [[ $SHELL == *"/zsh"* ]]; then
+        eval "$(zoxide init zsh)"
     fi
 
     # Alias z to zoxide
