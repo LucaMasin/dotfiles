@@ -13,8 +13,9 @@ def get_subfolders(folders: list[str]) -> list[str]:
         folder_path = Path(folder)
         folder_path = folder_path.expanduser().resolve()
         for subfolder in folder_path.glob("*"):
-            if subfolder.is_dir():
+            if subfolder.is_dir() and not subfolder.name.startswith("."):
                 subfolders.append(str(subfolder))
+    subfolders = list(set(subfolders))
     return subfolders
 
 
