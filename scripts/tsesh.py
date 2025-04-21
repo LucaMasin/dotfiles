@@ -1,9 +1,15 @@
 from pathlib import Path
 import subprocess
 import os
+import sys
+
+CONFIG_PATH = os.path.expanduser("~/scripts/.tsesh.folders")
+
+QUERY = sys.argv[1]
+print(QUERY)
 
 def get_folders() -> list[str]:
-    with open(os.path.expanduser("~/scripts/.tsesh.folders"), "r") as f:
+    with open(CONFIG_PATH, "r") as f:
         return f.read().splitlines()
 
 
@@ -45,8 +51,12 @@ def main():
 
     try:
         # Run fzf without capture_output to allow terminal interaction
+        base_command = ["fzf"]
+        if QUERY:
+            base_command.append(f"--query={QUERY}")
+        print(base_command)
         process = subprocess.Popen(
-            ["fzf"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
+            base_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
         )
 
         # Send the folders to fzf's stdin
