@@ -5,8 +5,8 @@ import sys
 
 CONFIG_PATH = os.path.expanduser("~/scripts/.tsesh.folders")
 
-QUERY = sys.argv[1]
-print(QUERY)
+QUERY = sys.argv[1] if len(sys.argv) > 1 else None
+
 
 def get_folders() -> list[str]:
     with open(CONFIG_PATH, "r") as f:
