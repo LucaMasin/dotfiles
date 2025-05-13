@@ -20,6 +20,9 @@ alias pingg='ping -c 5 google.com'
 # Find in local directory
 alias fld="ls -lah | grep"
 
+# Disk usage
+alias dus='du -h --max-depth=1 | sort -hr'
+
 # Own scripts
 alias tsesh='python3 ~/scripts/tsesh.py'
 
