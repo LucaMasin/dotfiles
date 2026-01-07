@@ -10,19 +10,24 @@ QUERY = sys.argv[1] if len(sys.argv) > 1 else None
 
 def get_folders() -> list[str]:
     with open(CONFIG_PATH, "r") as f:
-        return f.read().splitlines()
+        lines = f.read().splitlines()
+    return [line for line in lines if line and not line.startswith("#")]
 
 
 def get_subfolders(folders: list[str]) -> list[str]:
-    subfolders = []
+    subfolders_set = set()
     for folder in folders:
-        folder_path = Path(folder)
-        folder_path = folder_path.expanduser().resolve()
-        for subfolder in folder_path.glob("*"):
-            if subfolder.is_dir() and not subfolder.name.startswith("."):
-                subfolders.append(str(subfolder))
-    subfolders = list(set(subfolders))
-    return subfolders
+        folder_path = os.path.expanduser(folder)
+        try:
+            with os.scandir(folder_path) as it:
+                for entry in it:
+                    if entry.name.startswith("."):
+                        continue
+                    if entry.is_dir(follow_symlinks=True):
+                        subfolders_set.add(entry.path)
+        except OSError:
+            continue
+    return list(subfolders_set)
 
 
 def run_tmux_session(folder: str):
@@ -32,7 +37,6 @@ def run_tmux_session(folder: str):
         ["tmux", "has-session", "-t", tmux_session_name], capture_output=True, text=True
     )
     if session_exists.returncode == 0:
-        # if switch-client fails, attach to the session
         switch_client = subprocess.run(
             ["tmux", "switch-client", "-t", tmux_session_name],
             capture_output=True,
@@ -50,16 +54,13 @@ def main():
     folders_str = "\n".join(subfolders)
 
     try:
-        # Run fzf without capture_output to allow terminal interaction
         base_command = ["fzf"]
         if QUERY:
             base_command.append(f"--query={QUERY}")
-        print(base_command)
         process = subprocess.Popen(
             base_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
         )
 
-        # Send the folders to fzf's stdin
         selected, _ = process.communicate(input=folders_str)
 
         if process.returncode == 0:
