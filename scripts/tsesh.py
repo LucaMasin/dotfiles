@@ -2,10 +2,9 @@ from pathlib import Path
 import subprocess
 import os
 import sys
+import argparse
 
 CONFIG_PATH = os.path.expanduser("~/scripts/.tsesh.folders")
-
-QUERY = sys.argv[1] if len(sys.argv) > 1 else None
 
 
 def get_folders() -> list[str]:
@@ -48,15 +47,43 @@ def run_tmux_session(folder: str):
         subprocess.run(["tmux", "new-session", "-s", tmux_session_name, "-c", folder])
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Select a folder and open a tmux session."
+    )
+    parser.add_argument(
+        "query", nargs="?", default=None, help="Initial fzf search term"
+    )
+    parser.add_argument(
+        "-q",
+        "--query",
+        dest="explicit_query",
+        default=None,
+        help="Explicit fzf query flag",
+    )
+    parser.add_argument(
+        "-1",
+        "--select-1",
+        action="store_true",
+        help="Auto-select if only one match",
+    )
+    args = parser.parse_args()
+    query = args.explicit_query if args.explicit_query is not None else args.query
+    return query, args.select_1
+
+
 def main():
+    query, select_1 = parse_args()
     folders = get_folders()
     subfolders = get_subfolders(folders)
     folders_str = "\n".join(subfolders)
 
     try:
         base_command = ["fzf"]
-        if QUERY:
-            base_command.append(f"--query={QUERY}")
+        if query:
+            base_command.append(f"--query={query}")
+        if select_1:
+            base_command.extend(["--bind=change:first,enter:first", "--exit-0"])
         process = subprocess.Popen(
             base_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
         )
