@@ -88,6 +88,22 @@ The `zsh` package does not replace `~/.zshrc`. It inserts a managed block that s
 
 This enables your zsh plugins, keybindings, aliases, `zoxide`, and shell shortcuts.
 
+## Tmux Plugins
+
+The `tmux` package links `~/.config/tmux/tmux.conf`, installs Tmux Plugin Manager into:
+
+```text
+~/.tmux/plugins/tpm
+```
+
+Then it runs TPM's plugin installer so plugins from `~/.config/tmux/tmux.conf`, including the Tokyo Night theme, are installed automatically.
+
+If a tmux server is already running, reload the config inside tmux with prefix + `r`, or restart tmux:
+
+```bash
+tmux kill-server
+```
+
 ## Backups
 
 Before replacing an existing real file, directory, or symlink, the script moves it to:

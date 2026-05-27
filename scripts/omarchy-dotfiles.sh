@@ -227,6 +227,25 @@ configure_omarchy_zsh_shell() {
   printf '\n%s\n' "$shell_line" >>"$target"
 }
 
+configure_tmux_plugins() {
+  local tpm_dir="$HOME/.tmux/plugins/tpm"
+
+  if [[ -d $tpm_dir ]]; then
+    printf 'Tmux Plugin Manager already installed: %s\n' "$tpm_dir"
+  else
+    printf 'Installing Tmux Plugin Manager: %s\n' "$tpm_dir"
+    run mkdir -p "$(dirname -- "$tpm_dir")"
+    run git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+  fi
+
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: install tmux plugins from %s\n' "$HOME/.config/tmux/tmux.conf"
+    return 0
+  fi
+
+  "$tpm_dir/bin/install_plugins"
+}
+
 enabled_packages() {
   local line name type source target enabled description
 
@@ -254,6 +273,9 @@ install_package() {
 
   if [[ $PACKAGE_NAME == "zsh" ]]; then
     configure_omarchy_zsh_shell
+  fi
+  if [[ $PACKAGE_NAME == "tmux" ]]; then
+    configure_tmux_plugins
   fi
 }
 
