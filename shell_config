@@ -52,11 +52,11 @@ then
         unalias zi
     fi
 
-    # Setup zoxide for the correct shell
-    if [[ $SHELL == *"/bash"* ]]; then
-        eval "$(zoxide init bash)"
-    elif [[ $SHELL == *"/zsh"* ]]; then
+    # Setup zoxide for the currently running shell, not a stale inherited $SHELL.
+    if [[ -n ${ZSH_VERSION:-} ]]; then
         eval "$(zoxide init zsh)"
+    elif [[ -n ${BASH_VERSION:-} ]]; then
+        eval "$(zoxide init bash)"
     fi
 
     # Alias z to zoxide
