@@ -1,8 +1,55 @@
 # Omarchy Dotfiles
 
-Use `scripts/omarchy-dotfiles.sh` to selectively apply dotfiles on Omarchy without overwriting the full Omarchy setup.
+Use these scripts to set up this dotfiles repo on Omarchy without overwriting the full Omarchy desktop setup.
 
-The script is driven by `dotfiles-manifest.conf`. To add a new package later, add one line to that manifest instead of changing the script.
+There are two layers:
+
+```text
+setup_scripts/auto_setup/omarchy/setup.sh  installs required software, then applies config
+scripts/omarchy-dotfiles.sh                applies selected dotfiles config only
+```
+
+## Auto Setup
+
+Run this on an Omarchy machine after cloning the repo:
+
+```bash
+~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh
+```
+
+The auto setup script installs required packages with `omarchy pkg add`, then runs the default config install:
+
+```bash
+~/dotfiles/scripts/omarchy-dotfiles.sh install zsh nvim tmux
+```
+
+Installed packages:
+
+```text
+zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli
+```
+
+Preview without changing the system:
+
+```bash
+~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh --dry-run
+```
+
+If packages are already installed and you only want to apply config:
+
+```bash
+~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh --skip-packages
+```
+
+Combine both flags to preview config changes without checking packages:
+
+```bash
+~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh --dry-run --skip-packages
+```
+
+## Config Installer
+
+The config installer is driven by `dotfiles-manifest.conf`. To add a new config package later, add one line to that manifest instead of changing the script.
 
 ## List Packages
 
