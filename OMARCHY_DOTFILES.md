@@ -23,6 +23,8 @@ The auto setup script installs required packages with `omarchy pkg add`, then ru
 ~/dotfiles/scripts/omarchy-dotfiles.sh install zsh nvim tmux
 ```
 
+It also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
+
 It also enables Hyprland's scrolling layout as the default by setting this in `~/.config/hypr/looknfeel.conf`:
 
 ```text
@@ -32,7 +34,7 @@ layout = scrolling
 Installed packages:
 
 ```text
-zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli
+zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty
 ```
 
 Preview without changing the system:

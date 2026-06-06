@@ -21,6 +21,7 @@ PACKAGES=(
   uv
   python-pipx
   github-cli
+  ghostty
 )
 
 usage() {
@@ -68,6 +69,25 @@ apply_configs() {
 
   printf 'Applying Omarchy dotfiles config\n'
   "$DOTFILES_DIR/scripts/omarchy-dotfiles.sh" "${args[@]}" install "${DEFAULT_CONFIGS[@]}"
+}
+
+configure_default_terminal() {
+  local target="$HOME/.config/xdg-terminals.list"
+
+  printf 'Configuring Ghostty as the default terminal in %s\n' "$target"
+
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: write Ghostty terminal preference to %s\n' "$target"
+    return 0
+  fi
+
+  mkdir -p -- "${target%/*}"
+  cat >"$target" <<'EOF'
+# Terminal emulator preference order for xdg-terminal-exec
+# The first found and valid terminal will be used
+com.mitchellh.ghostty.desktop
+Alacritty.desktop
+EOF
 }
 
 configure_hyprland_scrolling_layout() {
@@ -138,6 +158,7 @@ main() {
 
   install_packages
   apply_configs
+  configure_default_terminal
   configure_hyprland_scrolling_layout
   reload_hyprland
 }
