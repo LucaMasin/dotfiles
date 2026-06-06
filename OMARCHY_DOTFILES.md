@@ -23,6 +23,12 @@ The auto setup script installs required packages with `omarchy pkg add`, then ru
 ~/dotfiles/scripts/omarchy-dotfiles.sh install zsh nvim tmux
 ```
 
+It also enables Hyprland's scrolling layout as the default by setting this in `~/.config/hypr/looknfeel.conf`:
+
+```text
+layout = scrolling
+```
+
 Installed packages:
 
 ```text

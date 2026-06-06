@@ -70,6 +70,61 @@ apply_configs() {
   "$DOTFILES_DIR/scripts/omarchy-dotfiles.sh" "${args[@]}" install "${DEFAULT_CONFIGS[@]}"
 }
 
+configure_hyprland_scrolling_layout() {
+  local target="$HOME/.config/hypr/looknfeel.conf"
+  local tmp_file in_general found
+
+  [[ -e $target ]] || return 0
+
+  if grep -Eq '^[[:space:]]*layout[[:space:]]*=[[:space:]]*scrolling[[:space:]]*$' "$target"; then
+    printf 'Hyprland scrolling layout already configured in %s\n' "$target"
+    return 0
+  fi
+
+  printf 'Configuring Hyprland default layout as scrolling in %s\n' "$target"
+
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: enable layout = scrolling in %s\n' "$target"
+    return 0
+  fi
+
+  tmp_file="$(mktemp)"
+  in_general=false
+  found=false
+
+  while IFS= read -r line || [[ -n $line ]]; do
+    if [[ $line =~ ^[[:space:]]*general[[:space:]]*\{[[:space:]]*$ ]]; then
+      in_general=true
+    elif [[ $in_general == true && $line =~ ^[[:space:]]*#[[:space:]]*layout[[:space:]]*=[[:space:]]*scrolling[[:space:]]*$ ]]; then
+      printf '    layout = scrolling\n' >>"$tmp_file"
+      found=true
+      continue
+    elif [[ $in_general == true && $line =~ ^[[:space:]]*\}[[:space:]]*$ ]]; then
+      if [[ $found == false ]]; then
+        printf '    layout = scrolling\n' >>"$tmp_file"
+        found=true
+      fi
+      in_general=false
+    fi
+
+    printf '%s\n' "$line" >>"$tmp_file"
+  done <"$target"
+
+  mv -- "$tmp_file" "$target"
+}
+
+reload_hyprland() {
+  command -v hyprctl >/dev/null || return 0
+
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: hyprctl reload && hyprctl configerrors\n'
+    return 0
+  fi
+
+  hyprctl reload
+  hyprctl configerrors
+}
+
 main() {
   while (($#)); do
     case "$1" in
@@ -83,6 +138,8 @@ main() {
 
   install_packages
   apply_configs
+  configure_hyprland_scrolling_layout
+  reload_hyprland
 }
 
 main "$@"
