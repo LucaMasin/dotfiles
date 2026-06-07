@@ -27,10 +27,6 @@ alias dus='du -h --max-depth=1 | sort -hr'
 alias tsesh='python3 ~/scripts/tsesh.py'
 
 # Expose programs
-# Check if /opt/nvim/ is not already in the PATH
-if [[ ":$PATH:" != *":/opt/nvim/:"* ]]; then
-    export PATH="$PATH:/opt/nvim/"
-fi
 # Check if $HOME/.local/bin/ is not already in the PATH
 if [[ ":$PATH:" != *":$HOME/.local/bin/:"* ]]; then
     export PATH="$PATH:$HOME/.local/bin/"
