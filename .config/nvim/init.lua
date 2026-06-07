@@ -11,6 +11,9 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Neovim 0.13 removed vim.tbl_islist; some plugins still expect it.
+vim.tbl_islist = vim.tbl_islist or vim.islist
+
 require("vim-options")
 require("lazy").setup("plugins")
 
