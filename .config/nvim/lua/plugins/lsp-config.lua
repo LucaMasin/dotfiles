@@ -13,6 +13,8 @@ return { -- LSP Configuration & Plugins
 		-- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
 		-- used for completion, annotations and signatures of Neovim apis
 		{ "folke/neodev.nvim", opts = {} },
+
+		"saghen/blink.cmp",
 	},
 	config = function()
 		-- Brief aside: **What is LSP?**
@@ -103,6 +105,10 @@ return { -- LSP Configuration & Plugins
 				--
 				-- When you move your cursor, the highlights will be cleared (the second autocommand).
 				local client = vim.lsp.get_client_by_id(event.data.client_id)
+				if client and client.name == "ruff" then
+					client.server_capabilities.hoverProvider = false
+				end
+
 				if client and client.server_capabilities.documentHighlightProvider then
 					local highlight_augroup = vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
 					vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
@@ -138,12 +144,48 @@ return { -- LSP Configuration & Plugins
 			end,
 		})
 
-		-- LSP servers and clients are able to communicate to each other what features they support.
-		--  By default, Neovim doesn't support everything that is in the LSP specification.
-		--  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
-		--  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
-		local capabilities = vim.lsp.protocol.make_client_capabilities()
-		capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
+		-- Advertise Blink's extended completion capabilities to LSP servers.
+		local capabilities = require("blink.cmp").get_lsp_capabilities()
+		local pyright_type_checking_mode = vim.g.python_type_checking_mode or "basic"
+		local valid_pyright_type_checking_modes = {
+			off = true,
+			basic = true,
+			standard = true,
+			strict = true,
+		}
+
+		local set_pyright_type_checking_mode = function(mode)
+			mode = mode == "none" and "off" or mode
+			if not valid_pyright_type_checking_modes[mode] then
+				vim.notify("Use one of: off, basic, standard, strict", vim.log.levels.ERROR)
+				return
+			end
+
+			vim.g.python_type_checking_mode = mode
+			pyright_type_checking_mode = mode
+
+			for _, client in ipairs(vim.lsp.get_clients({ name = "pyright" })) do
+				client.config.settings = vim.tbl_deep_extend("force", client.config.settings or {}, {
+					python = {
+						analysis = {
+							typeCheckingMode = mode,
+						},
+					},
+				})
+				client.notify("workspace/didChangeConfiguration", { settings = client.config.settings })
+			end
+
+			vim.notify("Pyright type checking: " .. mode)
+		end
+
+		vim.api.nvim_create_user_command("PyrightTypeChecking", function(opts)
+			set_pyright_type_checking_mode(opts.args)
+		end, {
+			nargs = 1,
+			complete = function()
+				return { "off", "basic", "standard", "strict" }
+			end,
+		})
 
 		-- Enable the following language servers
 		--  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -171,7 +213,23 @@ return { -- LSP Configuration & Plugins
 			-- 	},
 			-- },
 
-			ruff = {},
+			ruff = {
+				init_options = {
+					settings = {},
+				},
+			},
+			pyright = {
+				settings = {
+					pyright = {
+						disableOrganizeImports = true,
+					},
+					python = {
+						analysis = {
+							typeCheckingMode = pyright_type_checking_mode,
+						},
+					},
+				},
+			},
 
 			clangd = (function()
 				local executable = vim.fn.executable('clangd')
@@ -184,7 +242,6 @@ return { -- LSP Configuration & Plugins
 				return nil
 			end)(),
 
-			-- pyright = {},
 			-- rust_analyzer = {},
 			-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
 			--

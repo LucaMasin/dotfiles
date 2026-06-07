@@ -54,6 +54,11 @@ return {
 				--     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
 				--   },
 				-- },
+				defaults = {
+					preview = {
+						treesitter = false,
+					},
+				},
 				-- pickers = {}
 				extensions = {
 					["ui-select"] = {
