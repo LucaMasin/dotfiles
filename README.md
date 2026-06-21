@@ -7,6 +7,7 @@ The repo has one setup flow with platform-specific package handling behind it:
 ```text
 auto_install.sh          bootstrap: install git, clone/update repo, run setup
 setup_scripts/setup.sh   platform setup: packages/tools, then config
+setup_scripts/update.sh  update repo, then re-apply config without packages
 scripts/dotfiles.sh      config only: links/sources dotfiles-manifest.conf entries
 ```
 
@@ -61,6 +62,14 @@ Apply configs without installing packages:
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --skip-packages
 ```
+
+Pull the repo and re-apply config links/source blocks:
+
+```bash
+~/dotfiles/setup_scripts/update.sh
+```
+
+The repo does not use GNU stow anymore; `scripts/dotfiles.sh` manages symlinks from `dotfiles-manifest.conf`.
 
 Install only selected config packages:
 

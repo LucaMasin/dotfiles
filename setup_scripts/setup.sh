@@ -21,7 +21,6 @@ UBUNTU_PACKAGES=(
   curl
   wget
   unzip
-  stow
   ninja-build
   gettext
   cmake

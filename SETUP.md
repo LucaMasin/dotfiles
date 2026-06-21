@@ -6,6 +6,7 @@ There are two layers:
 
 ```text
 setup_scripts/setup.sh      installs platform packages, then applies config
+setup_scripts/update.sh     pulls the repo, then reapplies config only
 scripts/dotfiles.sh         applies selected dotfiles config only
 ```
 
@@ -62,6 +63,18 @@ Combine both flags to preview config changes without checking packages:
 
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --dry-run --skip-packages
+```
+
+Pull the repo and reapply config links/source blocks:
+
+```bash
+~/dotfiles/setup_scripts/update.sh
+```
+
+Preview the update flow:
+
+```bash
+~/dotfiles/setup_scripts/update.sh --dry-run
 ```
 
 Install the optional Ubuntu i3 desktop stack:
