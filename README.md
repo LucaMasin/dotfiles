@@ -1,83 +1,78 @@
 # Dotfiles
 
-Personal Linux dotfiles for shells, Neovim, tmux, scripts, agent skills, and optional desktop configs.
+Personal Linux dotfiles for shell, Neovim, tmux, helper scripts, agent skills, and desktop-specific config.
 
-The setup is intentionally split into two layers:
+The repo has one setup flow with platform-specific package handling behind it:
 
 ```text
-setup_scripts/setup.sh   platform setup: packages, tools, then config
-scripts/dotfiles.sh      config only: links/sources entries from dotfiles-manifest.conf
+auto_install.sh          bootstrap: install git, clone/update repo, run setup
+setup_scripts/setup.sh   platform setup: packages/tools, then config
+scripts/dotfiles.sh      config only: links/sources dotfiles-manifest.conf entries
 ```
-
-## Supported Systems
-
-- Omarchy: installs packages through `omarchy pkg add`, including Neovim.
-- Ubuntu: installs package dependencies with apt, but builds Neovim from source because apt Neovim is usually outdated.
-- Ubuntu i3: optional desktop stack, not installed by default.
 
 ## Quick Start
 
-Clone the repository, then run the platform setup:
+Bootstrap a supported machine:
+
+```bash
+curl -Ss https://raw.githubusercontent.com/LucaMasin/dotfiles/refs/heads/main/auto_install.sh | bash
+```
+
+Or, after cloning manually:
+
+```bash
+~/dotfiles/setup_scripts/setup.sh
+```
+
+`setup.sh` auto-detects the platform when possible. Pass a platform only when you want to override detection:
 
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --platform omarchy
 ~/dotfiles/setup_scripts/setup.sh --platform ubuntu
 ```
 
-If the platform can be detected, `--platform` can be omitted.
+## Supported Platforms
 
-Preview first:
+Omarchy:
 
-```bash
-~/dotfiles/setup_scripts/setup.sh --platform ubuntu --dry-run
-~/dotfiles/setup_scripts/setup.sh --platform omarchy --dry-run
-```
+- Packages are installed through `omarchy pkg add`.
+- Neovim is installed through Omarchy's package flow.
+- GitHub CLI is installed as `github-cli`.
+- Ghostty, Hyprland scrolling layout, and UWSM zsh preferences are applied when their config files exist.
+- Legacy desktop configs such as i3, polybar, rofi, picom, and alacritty are not applied by default.
 
-Apply config only:
+Ubuntu:
 
-```bash
-~/dotfiles/setup_scripts/setup.sh --platform ubuntu --skip-packages
-~/dotfiles/setup_scripts/setup.sh --platform omarchy --skip-packages
-```
+- Base dependencies are installed through apt.
+- GitHub CLI is installed from GitHub's official Debian/Ubuntu apt repository.
+- Neovim is built from source under `~/repos/neovim` because Ubuntu packages are usually outdated.
+- The old i3 desktop stack is opt-in with `--desktop i3`.
 
-## Ubuntu Bootstrap
+## Common Commands
 
-For a fresh Ubuntu machine:
-
-```bash
-curl -Ss https://raw.githubusercontent.com/LucaMasin/dotfiles/refs/heads/main/auto_install.sh | bash
-```
-
-This installs GitHub CLI if needed, clones the repo, and runs:
+Preview the full setup:
 
 ```bash
-~/dotfiles/setup_scripts/setup.sh --platform ubuntu
+~/dotfiles/setup_scripts/setup.sh --dry-run
 ```
 
-Ubuntu setup installs Neovim build dependencies, then clones or updates Neovim in `~/repos/neovim` and runs:
+Apply configs without installing packages:
 
 ```bash
-make -C ~/repos/neovim CMAKE_BUILD_TYPE=Release
-sudo make -C ~/repos/neovim install
+~/dotfiles/setup_scripts/setup.sh --skip-packages
 ```
 
-## Optional Ubuntu i3 Desktop
+Install only selected config packages:
 
-The i3 desktop stack is opt-in:
+```bash
+~/dotfiles/setup_scripts/setup.sh --skip-packages --configs zsh,nvim,tmux
+```
+
+Install the optional Ubuntu i3 desktop stack:
 
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --platform ubuntu --desktop i3
 ```
-
-This installs and applies configs for:
-
-- i3
-- polybar
-- alacritty
-- rofi
-- picom
-
-These config packages remain disabled by default in `dotfiles-manifest.conf` so they are not applied on Omarchy or config-only installs unless explicitly requested.
 
 ## Config Installer
 
@@ -119,17 +114,15 @@ The top-level setup applies these configs by default:
 - `scripts`: links repo helper scripts to `~/scripts`.
 - `agents`: links agent skills to `~/.agents`.
 
-## Omarchy Notes
+## Ubuntu Neovim Build
 
-Omarchy setup also applies a few desktop-specific preferences:
+On Ubuntu, setup installs build dependencies, then clones or updates Neovim in `~/repos/neovim` and runs:
 
-- Configures Ghostty as the preferred `xdg-terminal-exec` terminal.
-- Keeps Alacritty as a terminal fallback.
-- Enables Hyprland scrolling layout when `~/.config/hypr/looknfeel.conf` exists.
-- Sets UWSM shell to zsh when `~/.config/uwsm/env` exists.
-
-Old desktop configs such as i3, polybar, rofi, picom, and alacritty are not applied by default on Omarchy.
+```bash
+make -C ~/repos/neovim CMAKE_BUILD_TYPE=Release
+sudo make -C ~/repos/neovim install
+```
 
 ## More Details
 
-See `SETUP.md` for additional examples and manifest details.
+See `SETUP.md` for lower-level examples and manifest details.

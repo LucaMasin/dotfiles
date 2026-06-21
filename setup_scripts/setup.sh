@@ -125,17 +125,26 @@ parse_configs() {
 }
 
 configure_github_cli_apt_repo() {
-  if [[ -e /etc/apt/sources.list.d/github-cli.list ]]; then
+  local keyring="/etc/apt/keyrings/githubcli-archive-keyring.gpg"
+  local source_list="/etc/apt/sources.list.d/github-cli.list"
+
+  if [[ -e $keyring && -e $source_list ]]; then
     printf 'GitHub CLI apt repository already configured\n'
     return 0
   fi
 
   printf 'Configuring GitHub CLI apt repository\n'
+  if ! command -v wget >/dev/null 2>&1; then
+    run sudo apt update
+    run sudo apt install -y wget
+  fi
+
   run sudo mkdir -p -m 755 /etc/apt/keyrings
   run_shell \
     'install GitHub CLI apt keyring' \
-    'tmp_file="$(mktemp)" && wget -nv -O"$tmp_file" https://cli.github.com/packages/githubcli-archive-keyring.gpg && cat "$tmp_file" | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null && rm -f "$tmp_file"'
+    'out="$(mktemp)" && wget -nv -O"$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg && cat "$out" | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null && rm -f "$out"'
   run sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+  run sudo mkdir -p -m 755 /etc/apt/sources.list.d
   run_shell \
     'write GitHub CLI apt source list' \
     'printf "deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n" "$(dpkg --print-architecture)" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null'

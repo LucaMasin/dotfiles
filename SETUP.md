@@ -11,7 +11,13 @@ scripts/dotfiles.sh         applies selected dotfiles config only
 
 ## Platform Setup
 
-Run one of these after cloning the repo:
+Run setup after cloning the repo. The platform is detected automatically when possible:
+
+```bash
+~/dotfiles/setup_scripts/setup.sh
+```
+
+Or pass the platform explicitly:
 
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --platform ubuntu
@@ -43,19 +49,19 @@ zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx g
 Preview without changing the system:
 
 ```bash
-~/dotfiles/setup_scripts/setup.sh --platform omarchy --dry-run
+~/dotfiles/setup_scripts/setup.sh --dry-run
 ```
 
 If packages are already installed and you only want to apply config:
 
 ```bash
-~/dotfiles/setup_scripts/setup.sh --platform omarchy --skip-packages
+~/dotfiles/setup_scripts/setup.sh --skip-packages
 ```
 
 Combine both flags to preview config changes without checking packages:
 
 ```bash
-~/dotfiles/setup_scripts/setup.sh --platform omarchy --dry-run --skip-packages
+~/dotfiles/setup_scripts/setup.sh --dry-run --skip-packages
 ```
 
 Install the optional Ubuntu i3 desktop stack:
