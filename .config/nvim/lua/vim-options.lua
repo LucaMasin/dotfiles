@@ -13,6 +13,11 @@ vim.cmd("set expandtab")
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Disable unused remote providers to avoid healthcheck warnings.
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+
 -- Make line numbers default
 vim.opt.number = true
 -- Add relative line numbers, to help with jumping.
