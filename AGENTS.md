@@ -38,7 +38,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 ## Platform Gotchas
 
 - Platform detection is executable, not doc-only: Omarchy is detected by `command -v omarchy`; Ubuntu by `/etc/os-release` `ID=ubuntu`.
-- Ubuntu setup installs apt packages, configures the GitHub CLI apt repo, builds Neovim from source in `~/repos/neovim`, installs user tools via curl/cargo/pipx, then applies configs.
+- Ubuntu setup installs apt packages, configures the GitHub CLI apt repo, builds Neovim from source in `~/repos/neovim`, installs Yazi via Snap, installs other user tools via curl/cargo/pipx, then applies configs.
 - Omarchy setup uses `omarchy pkg add`, then may update `~/.config/uwsm/env`, write `~/.config/xdg-terminals.list`, edit `~/.config/hypr/looknfeel.conf`, and run `hyprctl reload`.
 - Omarchy intentionally leaves legacy Alacritty/i3/polybar/rofi/picom configs disabled because Omarchy/Hyprland manages those defaults.
 

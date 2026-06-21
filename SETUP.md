@@ -31,7 +31,7 @@ The setup script installs platform packages, then runs the default config instal
 ~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents
 ```
 
-On Ubuntu, Neovim is built from source under `~/repos/neovim` instead of installed from apt.
+On Ubuntu, Neovim is built from source under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement.
 
 On Omarchy, setup also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
 

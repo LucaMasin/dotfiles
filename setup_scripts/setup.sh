@@ -17,6 +17,7 @@ UBUNTU_PACKAGES=(
   ripgrep
   btop
   net-tools
+  snapd
   pipx
   curl
   wget
@@ -209,18 +210,28 @@ install_user_tools() {
     printf 'uv already installed\n'
   fi
 
+  install_yazi_from_snap
+
   if ! command -v cargo >/dev/null 2>&1; then
     run_shell 'install Rust toolchain' 'curl --proto "=https" --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y'
   else
     printf 'Rust toolchain already installed\n'
   fi
 
-  install_cargo_tool yazi yazi-fm yazi-cli
   install_cargo_tool tokei tokei
 
   if command -v pipx >/dev/null 2>&1 && ! command -v poetry >/dev/null 2>&1; then
     run pipx install poetry
   fi
+}
+
+install_yazi_from_snap() {
+  if command -v yazi >/dev/null 2>&1; then
+    printf 'yazi already installed\n'
+    return 0
+  fi
+
+  run sudo snap install yazi --classic
 }
 
 install_cargo_tool() {
