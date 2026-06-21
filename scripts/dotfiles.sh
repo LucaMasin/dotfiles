@@ -205,28 +205,6 @@ install_source() {
   printf 'Updated %s with %s sources\n' "$target" "$PACKAGE_NAME"
 }
 
-configure_omarchy_zsh_shell() {
-  local target="$HOME/.config/uwsm/env"
-  local shell_line="export SHELL=/usr/bin/zsh"
-
-  [[ -e $target ]] || return 0
-
-  if grep -Fxq -- "$shell_line" "$target"; then
-    printf 'Omarchy UWSM shell already configured in %s\n' "$target"
-    return 0
-  fi
-
-  backup_copy_target "$target"
-  printf 'Configuring Omarchy UWSM shell in %s\n' "$target"
-
-  if [[ $DRY_RUN == true ]]; then
-    printf 'dry-run: append %s\n' "$shell_line"
-    return 0
-  fi
-
-  printf '\n%s\n' "$shell_line" >>"$target"
-}
-
 configure_tmux_plugins() {
   local tpm_dir="$HOME/.tmux/plugins/tpm"
 
@@ -271,9 +249,6 @@ install_package() {
     *) die "$PACKAGE_NAME has unsupported type: $PACKAGE_TYPE" ;;
   esac
 
-  if [[ $PACKAGE_NAME == "zsh" ]]; then
-    configure_omarchy_zsh_shell
-  fi
   if [[ $PACKAGE_NAME == "tmux" ]]; then
     configure_tmux_plugins
   fi

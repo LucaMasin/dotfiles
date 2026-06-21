@@ -1,29 +1,32 @@
-# Omarchy Dotfiles
+# Dotfiles Setup
 
-Use these scripts to set up this dotfiles repo on Omarchy without overwriting the full Omarchy desktop setup.
+Use these scripts to set up this dotfiles repo on Ubuntu or Omarchy without duplicating config logic.
 
 There are two layers:
 
 ```text
-setup_scripts/auto_setup/omarchy/setup.sh  installs required software, then applies config
-scripts/omarchy-dotfiles.sh                applies selected dotfiles config only
+setup_scripts/setup.sh      installs platform packages, then applies config
+scripts/dotfiles.sh         applies selected dotfiles config only
 ```
 
-## Auto Setup
+## Platform Setup
 
-Run this on an Omarchy machine after cloning the repo:
+Run one of these after cloning the repo:
 
 ```bash
-~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh
+~/dotfiles/setup_scripts/setup.sh --platform ubuntu
+~/dotfiles/setup_scripts/setup.sh --platform omarchy
 ```
 
-The auto setup script installs required packages with `omarchy pkg add`, then runs the default config install:
+The setup script installs platform packages, then runs the default config install:
 
 ```bash
-~/dotfiles/scripts/omarchy-dotfiles.sh install zsh nvim tmux
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents
 ```
 
-It also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
+On Ubuntu, Neovim is built from source under `~/repos/neovim` instead of installed from apt.
+
+On Omarchy, setup also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
 
 It also enables Hyprland's scrolling layout as the default by setting this in `~/.config/hypr/looknfeel.conf`:
 
@@ -31,7 +34,7 @@ It also enables Hyprland's scrolling layout as the default by setting this in `~
 layout = scrolling
 ```
 
-Installed packages:
+Omarchy packages:
 
 ```text
 zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty
@@ -40,19 +43,25 @@ zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx g
 Preview without changing the system:
 
 ```bash
-~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh --dry-run
+~/dotfiles/setup_scripts/setup.sh --platform omarchy --dry-run
 ```
 
 If packages are already installed and you only want to apply config:
 
 ```bash
-~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh --skip-packages
+~/dotfiles/setup_scripts/setup.sh --platform omarchy --skip-packages
 ```
 
 Combine both flags to preview config changes without checking packages:
 
 ```bash
-~/dotfiles/setup_scripts/auto_setup/omarchy/setup.sh --dry-run --skip-packages
+~/dotfiles/setup_scripts/setup.sh --platform omarchy --dry-run --skip-packages
+```
+
+Install the optional Ubuntu i3 desktop stack:
+
+```bash
+~/dotfiles/setup_scripts/setup.sh --platform ubuntu --desktop i3
 ```
 
 ## Config Installer
@@ -62,7 +71,7 @@ The config installer is driven by `dotfiles-manifest.conf`. To add a new config 
 ## List Packages
 
 ```bash
-~/dotfiles/scripts/omarchy-dotfiles.sh list
+~/dotfiles/scripts/dotfiles.sh list
 ```
 
 ## Preview Changes
@@ -70,19 +79,19 @@ The config installer is driven by `dotfiles-manifest.conf`. To add a new config 
 Always preview first:
 
 ```bash
-~/dotfiles/scripts/omarchy-dotfiles.sh --dry-run install zsh nvim tmux
+~/dotfiles/scripts/dotfiles.sh --dry-run install zsh nvim tmux
 ```
 
 ## Install Selected Packages
 
 ```bash
-~/dotfiles/scripts/omarchy-dotfiles.sh install zsh nvim tmux
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux
 ```
 
 Install every enabled package:
 
 ```bash
-~/dotfiles/scripts/omarchy-dotfiles.sh install all
+~/dotfiles/scripts/dotfiles.sh install all
 ```
 
 ## Zsh Shortcuts
