@@ -1,120 +1,51 @@
-# AGENTS.md — repo-specific instructions for coding agents
+# AGENTS.md
 
-This repository is a personal **dotfiles** repo (shell, Neovim, i3, polybar, etc.).
-Most “build/test” workflows are *lint/format/sanity checks* rather than compiled builds.
+Personal Linux dotfiles repo. There is no repo-wide build system, package manifest, CI, pre-commit config, or formal test suite; verify changes with focused syntax/sanity checks.
 
-If you add new tooling, keep it optional and documented here.
+## High-Value Files
 
-## Repo layout
+- `README.md` and `SETUP.md`: user-facing setup flow and supported platforms.
+- `auto_install.sh`: bootstrap entrypoint for `curl | bash`; installs git, clones/updates `~/dotfiles`, then runs setup.
+- `setup_scripts/setup.sh`: platform package install plus config application; supports `--platform ubuntu|omarchy`, `--dry-run`, `--skip-packages`, `--desktop i3`, and `--configs <comma-list>|all`.
+- `setup_scripts/update.sh`: pulls with `git pull --ff-only`, then reruns setup with `--skip-packages`; passes remaining args through to setup.
+- `scripts/dotfiles.sh`: config-only installer driven by `dotfiles-manifest.conf`.
+- `.config/nvim/init.lua`: Neovim entrypoint; bootstraps `lazy.nvim`, then loads `lua/vim-options.lua` and `lua/plugins/**`.
 
-- `README.md`: high-level usage.
-- `auto_install.sh`: bootstrap script used by `curl | sh` install.
-- `setup_scripts/`: scripts to install/configure packages.
-- `.config/`: application configs (Neovim, i3, polybar, alacritty, etc.).
-- `scripts/`: small helper scripts.
+## Safe Commands
 
-## Rules files
+- Preview setup without changing the system: `setup_scripts/setup.sh --dry-run`.
+- Preview config-only install: `scripts/dotfiles.sh --dry-run install zsh nvim tmux`.
+- List manifest packages: `scripts/dotfiles.sh list`.
+- Check shell syntax after editing scripts: `bash -n path/to/script.sh`.
+- If available, lint shell scripts with `shellcheck path/to/script.sh`.
+- Neovim sanity check after config edits: `nvim --headless "+qa"`.
 
-- Cursor rules: none found (`.cursor/rules/` and `.cursorrules` missing).
-- Copilot rules: none found (`.github/copilot-instructions.md` missing).
+## Do Not Run Without Explicit User Approval
 
-If these get added later, *mirror the important constraints* into this file.
+- `auto_install.sh`, `setup_scripts/setup.sh` without `--dry-run`, or `setup_scripts/update.sh` without `--dry-run`; they can install packages, pull the repo, modify home-directory config, or run `sudo`.
+- `scripts/dotfiles.sh install ...` without `--dry-run`; it creates symlinks, edits shell rc files, backs up targets, and installs tmux plugins.
+- `setup_scripts/generate_github_ssh.sh`; it touches SSH/GitHub credentials.
 
-## Build / lint / test (practical)
+## Config Installer Facts
 
-This repo doesn’t have a unified build system. Use focused checks.
+- `dotfiles-manifest.conf` is the source of truth for installable config packages: `name|type|source|target|enabled|description`.
+- Supported manifest types are `link` for symlinks and `source` for managed source blocks.
+- Default setup applies `zsh nvim tmux scripts agents`; `--configs all` installs enabled packages only.
+- Existing targets are backed up under `${XDG_STATE_HOME:-~/.local/state}/dotfiles-backup/<timestamp>/` before replacement or source-block rewrite.
+- Disabled desktop configs (`alacritty`, `i3`, `polybar`, `picom`, `rofi`, `zathura`) are documented in the manifest; enable there or use `--force-disabled` only intentionally.
+- Ubuntu i3 setup is opt-in via `setup_scripts/setup.sh --platform ubuntu --desktop i3`, which force-installs the disabled legacy desktop configs.
 
-### Shell scripts
+## Platform Gotchas
 
-- Syntax check: `bash -n path/to/script.sh`
-- Lint (if installed): `shellcheck path/to/script.sh`
-- Format (if installed): `shfmt -w path/to/script.sh`
+- Platform detection is executable, not doc-only: Omarchy is detected by `command -v omarchy`; Ubuntu by `/etc/os-release` `ID=ubuntu`.
+- Ubuntu setup installs apt packages, configures the GitHub CLI and NodeSource apt repos, builds Neovim from source in `~/repos/neovim`, installs Yazi via Snap, installs other user tools via curl/cargo/pipx, then applies configs.
+- Omarchy setup uses `omarchy pkg add`, then may update `~/.config/uwsm/env`, write `~/.config/xdg-terminals.list`, edit `~/.config/hypr/looknfeel.conf`, and run `hyprctl reload`.
+- Omarchy intentionally leaves legacy Alacritty/i3/polybar/rofi/picom configs disabled because Omarchy/Hyprland manages those defaults.
 
-### Neovim config
+## Editing Conventions
 
-- Headless start (sanity check): `nvim --headless "+qa"`
-- Minimal Lua eval: `nvim --headless "+lua print('ok')" +qa`
-
-### Repo hygiene
-
-- Search: `rg "pattern"`
-- Changes: `git diff` and `git status --porcelain=v1`
-
-## Single-check equivalents
-
-There’s no formal test suite; use these “single target” checks:
-
-- Shell: `bash -n file.sh` (+ `shellcheck file.sh`)
-- i3: reload on live system: `i3-msg reload`
-- polybar: restart on live system
-
-Only run system-modifying scripts (`setup_scripts/**`) if the user explicitly asks.
-
-## Code style guidelines
-
-### General principles
-
-- Prefer **small, reviewable diffs**: change only what’s needed.
-- Keep scripts **idempotent** where practical (safe to re-run).
-- Avoid introducing new dependencies unless necessary.
-
-### Shell (bash) conventions
-
-- **Shebang:** use `#!/usr/bin/env bash` for bash scripts.
-- **Strict mode (new scripts):** `set -euo pipefail`; add `IFS=$'\n\t'` only when splitting.
-- **Quoting:** always quote expansions: `"$var"`.
-- **Arrays:** prefer arrays over word-splitting; avoid `for x in $(...)`.
-- **Functions:** `snake_case` names; keep functions small and single-purpose.
-- **Naming:** `UPPER_SNAKE` for env/exported vars; `lower_snake` for locals.
-- **Conditionals:** use `[[ ... ]]` over `[ ... ]` in bash.
-- **Pipelines:** prefer explicit error checks if not using `pipefail`.
-- **Exit early:** validate inputs at the start; return non-zero on error.
-
-### Error handling
-
-- Check command success explicitly or rely on `set -e`.
-- Prefer informative messages to stderr:
-  - `echo "error: message" >&2`
-- Use helper functions for consistent failures in larger scripts:
-  - `die() { echo "error: $*" >&2; exit 1; }`
-
-### Naming & files
-
-- Script files: `kebab-case.sh` or existing convention in that folder.
-- Variables: `UPPER_SNAKE` for environment/exported vars; `lower_snake` for locals.
-- Prefer consistent directory names already present (`setup_scripts`, `scripts`).
-
-### Imports / sourcing
-
-- Prefer explicit paths when sourcing:
-  - `source "${BASH_SOURCE[0]%/*}/relative.sh"`
-- Avoid sourcing user-local files unless required.
-
-### Neovim / Lua conventions
-
-- Keep Neovim config changes localized under `.config/nvim/**`.
-- Prefer `require("...")` modules over `dofile`.
-- Respect Lua LS settings in `.config/nvim/lua/.luarc.json`.
-- Keep plugin config consistent with the existing style in `.config/nvim/lua/plugins/**`.
-
-### Config files (i3/polybar/alacritty/etc.)
-
-- Maintain existing indentation and ordering.
-- Avoid mass reformatting; only touch lines needed for the requested change.
-
-## Safety notes (important)
-
-- **Do not** run scripts that use `sudo` unless asked.
-- **Do not** assume a specific distro or package manager unless the script’s
-  directory indicates it (e.g. `setup_scripts/auto_setup/ubuntu/**`).
-- Avoid commands that alter user login shells, SSH keys, or system services
-  unless explicitly requested.
-
-## When adding new automation
-
-If you add a repo-wide workflow, prefer one of:
-
-- `Makefile` with `make lint`, `make fmt`, `make test`
-- `justfile` with `just lint`, `just fmt`, `just test`
-
-And update this file with exact commands, including a “single test” invocation.
+- Keep diffs small and avoid mass-formatting personal config files.
+- Keep `README.md`, `SETUP.md`, and `AGENTS.md` updated when setup flow, commands, platforms, or agent-relevant constraints change.
+- For new bash scripts, match existing style: `#!/usr/bin/env bash`, `set -euo pipefail`, `snake_case` functions, quoted expansions, `[[ ... ]]` tests.
+- For Neovim changes, keep plugin specs under `.config/nvim/lua/plugins/**`; respect `.config/nvim/lua/.luarc.json` (`vim` global).
+- If adding a new config package, prefer one manifest line in `dotfiles-manifest.conf` over hard-coding installer logic.
