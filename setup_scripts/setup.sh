@@ -8,6 +8,7 @@ DRY_RUN=false
 SKIP_PACKAGES=false
 DESKTOP="none"
 CONFIGS=(zsh nvim tmux scripts agents)
+NODE_MAJOR=24
 
 UBUNTU_PACKAGES=(
   zsh
@@ -150,6 +151,31 @@ configure_github_cli_apt_repo() {
     'printf "deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n" "$(dpkg --print-architecture)" | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null'
 }
 
+configure_nodesource_apt_repo() {
+  local keyring="/etc/apt/keyrings/nodesource.gpg"
+  local source_list="/etc/apt/sources.list.d/nodesource.list"
+  local repo_line="deb [signed-by=$keyring] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main"
+
+  if [[ -e $keyring && -e $source_list ]] && grep -Fxq "$repo_line" "$source_list"; then
+    printf 'NodeSource apt repository already configured\n'
+    return 0
+  fi
+
+  printf 'Configuring NodeSource apt repository for Node.js %s\n' "$NODE_MAJOR"
+  run sudo apt update
+  run sudo apt install -y ca-certificates curl gnupg
+
+  run sudo mkdir -p -m 755 /etc/apt/keyrings
+  run_shell \
+    'install NodeSource apt keyring' \
+    'out="$(mktemp)" && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key -o"$out" && gpg --dearmor <"$out" | sudo tee /etc/apt/keyrings/nodesource.gpg >/dev/null && rm -f "$out"'
+  run sudo chmod go+r /etc/apt/keyrings/nodesource.gpg
+  run sudo mkdir -p -m 755 /etc/apt/sources.list.d
+  run_shell \
+    'write NodeSource apt source list' \
+    "printf '%s\n' '$repo_line' | sudo tee /etc/apt/sources.list.d/nodesource.list >/dev/null"
+}
+
 install_ubuntu_packages() {
   local packages=("${UBUNTU_PACKAGES[@]}")
 
@@ -160,7 +186,8 @@ install_ubuntu_packages() {
   fi
 
   configure_github_cli_apt_repo
-  packages+=(gh)
+  configure_nodesource_apt_repo
+  packages+=(gh nodejs)
 
   printf 'Installing Ubuntu packages\n'
   run sudo apt update

@@ -46,6 +46,7 @@ Ubuntu:
 
 - Base dependencies are installed through apt.
 - GitHub CLI is installed from GitHub's official Debian/Ubuntu apt repository.
+- Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm.
 - Neovim is built from source under `~/repos/neovim` because Ubuntu packages are usually outdated.
 - Yazi is installed from Snap with classic confinement.
 - The old i3 desktop stack is opt-in with `--desktop i3`.
