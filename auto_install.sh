@@ -23,7 +23,33 @@ detect_platform() {
     esac
   fi
 
+  if is_supported_raspberrypi; then
+    printf 'raspberrypi\n'
+    return 0
+  fi
+
   return 1
+}
+
+is_supported_raspberrypi() {
+  local model codename
+  local VERSION_CODENAME=""
+  local DEBIAN_CODENAME=""
+
+  [[ "$(uname -m)" == "aarch64" ]] || return 1
+  [[ -r /proc/device-tree/model ]] || return 1
+
+  model="$(tr -d '\0' </proc/device-tree/model 2>/dev/null || true)"
+  case "$model" in
+    "Raspberry Pi 4"*|"Raspberry Pi 5"*) ;;
+    *) return 1 ;;
+  esac
+
+  [[ -r /etc/os-release ]] || return 1
+  # shellcheck disable=SC1091
+  source /etc/os-release
+  codename="${VERSION_CODENAME:-$DEBIAN_CODENAME}"
+  [[ $codename == trixie ]]
 }
 
 install_git() {
@@ -33,7 +59,7 @@ install_git() {
 
   printf 'Installing git\n'
   case "$platform" in
-    ubuntu)
+    ubuntu|raspberrypi)
       sudo apt update
       sudo apt install -y git
       ;;
@@ -49,7 +75,7 @@ install_git() {
 main() {
   local platform
 
-  platform="$(detect_platform)" || die 'could not detect platform; bootstrap supports ubuntu and omarchy'
+  platform="$(detect_platform)" || die 'could not detect platform; bootstrap supports ubuntu, omarchy, and raspberrypi'
   install_git "$platform"
 
   if [[ -d $DOTFILES_DIR/.git ]]; then

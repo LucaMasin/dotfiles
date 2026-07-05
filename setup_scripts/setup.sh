@@ -56,10 +56,33 @@ OMARCHY_PACKAGES=(
   ghostty
 )
 
+RASPBERRYPI_PACKAGES=(
+  zsh
+  tmux
+  git
+  fzf
+  ripgrep
+  btop
+  net-tools
+  pipx
+  curl
+  wget
+  unzip
+  ninja-build
+  gettext
+  cmake
+  build-essential
+  python3-venv
+  fd-find
+  starship
+  zoxide
+  tokei
+)
+
 usage() {
   cat <<EOF
 Usage:
-  ${0##*/} [--platform ubuntu|omarchy] [--dry-run] [--skip-packages] [--desktop i3] [--configs list|all]
+  ${0##*/} [--platform ubuntu|omarchy|raspberrypi] [--dry-run] [--skip-packages] [--desktop i3] [--configs list|all]
 
 Options:
   --platform       Target platform. Auto-detected when omitted.
@@ -111,7 +134,33 @@ detect_platform() {
     esac
   fi
 
+  if is_supported_raspberrypi; then
+    printf 'raspberrypi\n'
+    return 0
+  fi
+
   return 1
+}
+
+is_supported_raspberrypi() {
+  local model codename
+  local VERSION_CODENAME=""
+  local DEBIAN_CODENAME=""
+
+  [[ "$(uname -m)" == "aarch64" ]] || return 1
+  [[ -r /proc/device-tree/model ]] || return 1
+
+  model="$(tr -d '\0' </proc/device-tree/model 2>/dev/null || true)"
+  case "$model" in
+    "Raspberry Pi 4"*|"Raspberry Pi 5"*) ;;
+    *) return 1 ;;
+  esac
+
+  [[ -r /etc/os-release ]] || return 1
+  # shellcheck disable=SC1091
+  source /etc/os-release
+  codename="${VERSION_CODENAME:-$DEBIAN_CODENAME}"
+  [[ $codename == trixie ]]
 }
 
 parse_configs() {
@@ -284,6 +333,48 @@ install_omarchy_packages() {
   run omarchy pkg add "${OMARCHY_PACKAGES[@]}"
 }
 
+install_raspberrypi_packages() {
+  local packages=("${RASPBERRYPI_PACKAGES[@]}")
+
+  [[ $SKIP_PACKAGES == false ]] || { printf 'Skipping package installation\n'; return 0; }
+
+  configure_github_cli_apt_repo
+  configure_nodesource_apt_repo
+  packages+=(gh nodejs)
+
+  printf 'Installing Raspberry Pi packages\n'
+  run sudo apt update
+  run sudo apt install -y "${packages[@]}"
+
+  install_neovim_from_source
+  install_pi_user_tools
+}
+
+install_pi_user_tools() {
+  if ! command -v uv >/dev/null 2>&1; then
+    run_shell 'install uv' 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+  else
+    printf 'uv already installed\n'
+  fi
+
+  install_yazi_from_deb
+
+  if command -v pipx >/dev/null 2>&1 && ! command -v poetry >/dev/null 2>&1; then
+    run pipx install poetry
+  fi
+}
+
+install_yazi_from_deb() {
+  if command -v yazi >/dev/null 2>&1; then
+    printf 'yazi already installed\n'
+    return 0
+  fi
+
+  run_shell \
+    'install yazi from GitHub release .deb' \
+    'tmp="$(mktemp --suffix=.deb)" && trap "rm -f \"$tmp\"" EXIT && curl -fsSL -o "$tmp" https://github.com/sxyazi/yazi/releases/latest/download/yazi-aarch64-unknown-linux-gnu.deb && sudo apt install -y "$tmp"'
+}
+
 configure_omarchy_zsh_shell() {
   local target="$HOME/.config/uwsm/env"
   local shell_line='export SHELL=/usr/bin/zsh'
@@ -425,11 +516,11 @@ parse_args() {
   done
 
   if [[ -z $PLATFORM ]]; then
-    PLATFORM="$(detect_platform)" || die 'could not detect platform; pass --platform ubuntu or --platform omarchy'
+    PLATFORM="$(detect_platform)" || die 'could not detect platform; pass --platform ubuntu, --platform omarchy, or --platform raspberrypi'
   fi
 
   case "$PLATFORM" in
-    ubuntu|omarchy) ;;
+    ubuntu|omarchy|raspberrypi) ;;
     *) die "unsupported platform: $PLATFORM" ;;
   esac
 
@@ -445,6 +536,7 @@ main() {
   case "$PLATFORM" in
     ubuntu) install_ubuntu_packages ;;
     omarchy) install_omarchy_packages ;;
+    raspberrypi) install_raspberrypi_packages ;;
   esac
 
   apply_configs

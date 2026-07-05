@@ -1,6 +1,6 @@
 # Dotfiles Setup
 
-Use these scripts to set up this dotfiles repo on Ubuntu or Omarchy without duplicating config logic.
+Use these scripts to set up this dotfiles repo on Ubuntu, Omarchy, or Raspberry Pi OS without duplicating config logic.
 
 There are two layers:
 
@@ -23,6 +23,7 @@ Or pass the platform explicitly:
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --platform ubuntu
 ~/dotfiles/setup_scripts/setup.sh --platform omarchy
+~/dotfiles/setup_scripts/setup.sh --platform raspberrypi
 ```
 
 The setup script installs platform packages, then runs the default config install:
@@ -32,6 +33,8 @@ The setup script installs platform packages, then runs the default config instal
 ```
 
 On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from source under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement.
+
+On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from source under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script.
 
 On Omarchy, setup also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
 
@@ -45,6 +48,12 @@ Omarchy packages:
 
 ```text
 zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty
+```
+
+Raspberry Pi OS packages (apt, plus curl-installed `uv` and apt-installed upstream Yazi `.deb`):
+
+```text
+zsh tmux git fzf ripgrep btop net-tools pipx curl wget unzip ninja-build gettext cmake build-essential python3-venv fd-find starship zoxide tokei gh nodejs
 ```
 
 Preview without changing the system:
