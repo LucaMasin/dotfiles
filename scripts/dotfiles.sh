@@ -206,7 +206,7 @@ install_source() {
 }
 
 configure_tmux_plugins() {
-  local tpm_dir="$HOME/.tmux/plugins/tpm"
+  local tpm_dir="$HOME/.config/tmux/plugins/tpm"
 
   if [[ -d $tpm_dir ]]; then
     printf 'Tmux Plugin Manager already installed: %s\n' "$tpm_dir"
