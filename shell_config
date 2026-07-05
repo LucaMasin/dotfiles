@@ -32,6 +32,16 @@ if [[ ":$PATH:" != *":$HOME/.local/bin/:"* ]]; then
     export PATH="$PATH:$HOME/.local/bin/"
 fi
 
+if [[ -n ${ZSH_VERSION:-} ]]; then
+    if command -v uv &> /dev/null; then
+        eval "$(uv generate-shell-completion zsh)"
+    fi
+
+    if command -v uvx &> /dev/null; then
+        eval "$(uvx --generate-shell-completion zsh)"
+    fi
+fi
+
 # Check if nvim is available
 if command -v nvim &> /dev/null
 then
