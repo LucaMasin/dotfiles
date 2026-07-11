@@ -29,7 +29,7 @@ Or pass the platform explicitly:
 The setup script installs platform packages, then runs the default config install:
 
 ```bash
-~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents opencode
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents
 ```
 
 On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from source under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode2 is installed globally via npm.

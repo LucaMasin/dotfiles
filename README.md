@@ -105,7 +105,7 @@ Use the config installer directly when packages are already handled:
 ```bash
 ~/dotfiles/scripts/dotfiles.sh list
 ~/dotfiles/scripts/dotfiles.sh --dry-run install zsh nvim tmux
-~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents opencode
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents
 ~/dotfiles/scripts/dotfiles.sh install all
 ```
 
