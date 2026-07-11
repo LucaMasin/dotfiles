@@ -30,7 +30,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 
 - `dotfiles-manifest.conf` is the source of truth for installable config packages: `name|type|source|target|enabled|description`.
 - Supported manifest types are `link` for symlinks and `source` for managed source blocks.
-- Default setup applies `zsh nvim tmux scripts agents`; `--configs all` installs enabled packages only.
+- Default setup applies `zsh nvim tmux scripts agents opencode`; `--configs all` installs enabled packages only.
 - Existing targets are backed up under `${XDG_STATE_HOME:-~/.local/state}/dotfiles-backup/<timestamp>/` before replacement or source-block rewrite.
 - Disabled desktop configs (`alacritty`, `i3`, `polybar`, `picom`, `rofi`, `zathura`) are documented in the manifest; enable there or use `--force-disabled` only intentionally.
 - Ubuntu i3 setup is opt-in via `setup_scripts/setup.sh --platform ubuntu --desktop i3`, which force-installs the disabled legacy desktop configs.

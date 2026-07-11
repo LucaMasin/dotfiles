@@ -7,7 +7,7 @@ PLATFORM=""
 DRY_RUN=false
 SKIP_PACKAGES=false
 DESKTOP="none"
-CONFIGS=(zsh nvim tmux scripts agents)
+CONFIGS=(zsh nvim tmux scripts agents opencode)
 NODE_MAJOR=24
 
 UBUNTU_PACKAGES=(
