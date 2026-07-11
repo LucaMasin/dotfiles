@@ -11,6 +11,8 @@
       "variant": "xhigh",
       "prompt": "Own task decomposition and architectural decisions. Delegate bounded repository exploration and well-specified implementation work to the appropriate subagent. Review each result before synthesizing the final response. Do not edit files directly; when essential information is missing or an action requires approval, ask rather than guess.",
       "permission": {
+        "edit": "deny",
+        "question": "allow",
         "task": {
           "*": "deny",
           "cheap-explorer": "allow",
@@ -18,9 +20,21 @@
           "balanced-explorer": "allow",
           "balanced-worker": "allow",
           "smart-reviewer": "allow"
-        },
+        }
+      }
+    },
+
+    "review": {
+      "description": "Use for independent, read-only review of completed changes for correctness, regressions, security, and missing tests.",
+      "mode": "primary",
+      "model": "openai/gpt-5.6-terra",
+      "variant": "xhigh",
+      "steps": 24,
+      "prompt": "Do not modify files. Prioritize actionable defects by severity with file and line evidence. Review correctness, regressions, security, and missing tests; explicitly say when no findings are identified, and distinguish verified issues from risks.",
+      "permission": {
         "edit": "deny",
-        "bash": "ask"
+        "bash": "ask",
+        "task": "deny"
       }
     },
 
