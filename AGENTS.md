@@ -38,9 +38,9 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 ## Platform Gotchas
 
 - Platform detection is executable, not doc-only: Omarchy is detected by `command -v omarchy`; Ubuntu by `/etc/os-release` `ID=ubuntu`; Raspberry Pi by `/proc/device-tree/model` matching Pi 4 or Pi 5, `uname -m` equal to `aarch64`, and `/etc/os-release` codename `trixie`.
-- Ubuntu setup installs apt packages, configures the GitHub CLI and NodeSource apt repos, builds Neovim from source in `~/repos/neovim`, installs Yazi via Snap, installs other user tools via curl/cargo/pipx, then applies configs.
-- Raspberry Pi OS setup (64-bit Trixie only, Pi 4 or Pi 5) installs apt packages including `starship`, `zoxide`, `tokei`, and `fd-find`, configures the GitHub CLI and NodeSource apt repos, builds Neovim from source in `~/repos/neovim`, installs Yazi from the upstream `aarch64` `.deb` release asset through apt so dependencies resolve, and installs `uv` via the Astral installer script.
-- Omarchy setup uses `omarchy pkg add`, then may update `~/.config/uwsm/env`, write `~/.config/xdg-terminals.list`, edit `~/.config/hypr/looknfeel.conf`, and run `hyprctl reload`.
+- Ubuntu setup installs apt packages, configures the GitHub CLI and NodeSource apt repos, builds Neovim from source in `~/repos/neovim`, installs Yazi via Snap, installs opencode2 via npm, installs other user tools via curl/cargo/pipx, then applies configs.
+- Raspberry Pi OS setup (64-bit Trixie only, Pi 4 or Pi 5) installs apt packages including `starship`, `zoxide`, `tokei`, and `fd-find`, configures the GitHub CLI and NodeSource apt repos, builds Neovim from source in `~/repos/neovim`, installs Yazi from the upstream `aarch64` `.deb` release asset through apt so dependencies resolve, installs opencode2 via npm, and installs `uv` via the Astral installer script.
+- Omarchy setup uses `omarchy pkg add` (including `nodejs`/`npm`), installs opencode2 via npm, then may update `~/.config/uwsm/env`, write `~/.config/xdg-terminals.list`, edit `~/.config/hypr/looknfeel.conf`, and run `hyprctl reload`.
 - Omarchy intentionally leaves legacy Alacritty/i3/polybar/rofi/picom configs disabled because Omarchy/Hyprland manages those defaults.
 
 ## Editing Conventions

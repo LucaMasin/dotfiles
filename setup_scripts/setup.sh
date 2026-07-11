@@ -54,6 +54,8 @@ OMARCHY_PACKAGES=(
   python-pipx
   github-cli
   ghostty
+  nodejs
+  npm
 )
 
 RASPBERRYPI_PACKAGES=(
@@ -299,6 +301,8 @@ install_user_tools() {
   if command -v pipx >/dev/null 2>&1 && ! command -v poetry >/dev/null 2>&1; then
     run pipx install poetry
   fi
+
+  install_opencode2
 }
 
 install_yazi_from_snap() {
@@ -324,6 +328,15 @@ install_cargo_tool() {
     "source \"$HOME/.cargo/env\" 2>/dev/null || true; cargo install --locked $*"
 }
 
+install_opencode2() {
+  if command -v opencode2 >/dev/null 2>&1; then
+    printf 'opencode2 already installed\n'
+    return 0
+  fi
+
+  run_shell 'install opencode2 with npm' 'npm install -g @opencode-ai/cli@next'
+}
+
 install_omarchy_packages() {
   [[ $SKIP_PACKAGES == false ]] || { printf 'Skipping package installation\n'; return 0; }
 
@@ -331,6 +344,7 @@ install_omarchy_packages() {
 
   printf 'Installing Omarchy packages\n'
   run omarchy pkg add "${OMARCHY_PACKAGES[@]}"
+  install_opencode2
 }
 
 install_raspberrypi_packages() {
@@ -362,6 +376,8 @@ install_pi_user_tools() {
   if command -v pipx >/dev/null 2>&1 && ! command -v poetry >/dev/null 2>&1; then
     run pipx install poetry
   fi
+
+  install_opencode2
 }
 
 install_yazi_from_deb() {
