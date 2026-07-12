@@ -9,6 +9,7 @@ SKIP_PACKAGES=false
 DESKTOP="none"
 CONFIGS=(zsh nvim tmux scripts agents)
 NODE_MAJOR=24
+NEOVIM_REPOSITORY="https://github.com/neovim/neovim.git"
 
 UBUNTU_PACKAGES=(
   zsh
@@ -40,7 +41,6 @@ UBUNTU_I3_PACKAGES=(
 
 OMARCHY_PACKAGES=(
   zsh
-  neovim
   tmux
   git
   fzf
@@ -56,6 +56,11 @@ OMARCHY_PACKAGES=(
   ghostty
   nodejs
   npm
+  base-devel
+  cmake
+  ninja
+  gettext
+  unzip
 )
 
 RASPBERRYPI_PACKAGES=(
@@ -250,23 +255,49 @@ install_ubuntu_packages() {
 
 install_neovim_from_source() {
   local repo_dir="$HOME/repos/neovim"
+  local runtime_dir="/usr/local/share/nvim/runtime"
+  local tag
 
-  printf 'Building Neovim from source\n'
+  printf 'Building the latest stable Neovim release from source\n'
   if [[ $DRY_RUN == true ]]; then
-    printf 'dry-run: clone or update https://github.com/neovim/neovim in %s\n' "$repo_dir"
-    printf 'dry-run: make CMAKE_BUILD_TYPE=Release && sudo make install\n'
+    printf 'dry-run: resolve the latest stable Neovim tag from %s\n' "$NEOVIM_REPOSITORY"
+    printf 'dry-run: clone or update the resolved tag in %s\n' "$repo_dir"
+    printf 'dry-run: sudo make distclean && sudo rm -rf %s && make CMAKE_BUILD_TYPE=Release && sudo cmake --install build\n' "$runtime_dir"
     return 0
   fi
 
+  tag="$(latest_neovim_tag)" || die 'could not resolve the latest stable Neovim release tag'
+  printf 'Using Neovim %s\n' "$tag"
+
   mkdir -p -- "$HOME/repos"
   if [[ -d $repo_dir/.git ]]; then
-    git -C "$repo_dir" pull --ff-only
+    git -C "$repo_dir" fetch --force --tags origin
+    git -C "$repo_dir" checkout --detach "$tag"
   else
-    git clone https://github.com/neovim/neovim "$repo_dir"
+    git clone --branch "$tag" --depth 1 "$NEOVIM_REPOSITORY" "$repo_dir"
   fi
 
+  sudo make -C "$repo_dir" distclean
+  sudo rm -rf -- "$runtime_dir"
   make -C "$repo_dir" CMAKE_BUILD_TYPE=Release
-  sudo make -C "$repo_dir" install
+  sudo cmake --install "$repo_dir/build"
+}
+
+latest_neovim_tag() {
+  local tag
+
+  tag="$(
+    git ls-remote --tags --refs "$NEOVIM_REPOSITORY" |
+      while IFS=$'\t' read -r _ ref; do
+        tag="${ref#refs/tags/}"
+        [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] && printf '%s\n' "$tag"
+      done |
+      sort -V |
+      tail -n 1
+  )"
+
+  [[ -n $tag ]] || return 1
+  printf '%s\n' "$tag"
 }
 
 install_user_tools() {
@@ -344,6 +375,7 @@ install_omarchy_packages() {
 
   printf 'Installing Omarchy packages\n'
   run omarchy pkg add "${OMARCHY_PACKAGES[@]}"
+  install_neovim_from_source
   install_opencode2
 }
 

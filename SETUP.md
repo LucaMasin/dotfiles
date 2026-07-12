@@ -32,11 +32,11 @@ The setup script installs platform packages, then runs the default config instal
 ~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents
 ```
 
-On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from source under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode2 is installed globally via npm.
+On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from the latest stable source release under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode2 is installed globally via npm.
 
-On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from source under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script. opencode2 is installed globally via npm.
+On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from the latest stable source release under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script. opencode2 is installed globally via npm.
 
-On Omarchy, setup also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
+On Omarchy, Neovim is built from the latest stable source release under `~/repos/neovim`. Setup also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
 
 It also enables Hyprland's scrolling layout as the default by setting this in `~/.config/hypr/looknfeel.conf`:
 
@@ -47,7 +47,7 @@ layout = scrolling
 Omarchy packages:
 
 ```text
-zsh neovim tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty nodejs npm
+zsh tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty nodejs npm base-devel cmake ninja gettext unzip
 ```
 
 Raspberry Pi OS packages (apt, plus curl-installed `uv` and apt-installed upstream Yazi `.deb`):
@@ -67,6 +67,14 @@ If packages are already installed and you only want to apply config:
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --skip-packages
 ```
+
+To install or refresh Neovim while applying only its configuration:
+
+```bash
+~/dotfiles/setup_scripts/setup.sh --configs nvim
+```
+
+This installs the platform packages required for the Neovim build; omit `--skip-packages`.
 
 Combine both flags to preview config changes without checking packages:
 

@@ -38,7 +38,7 @@ Or, after cloning manually:
 Omarchy:
 
 - Packages are installed through `omarchy pkg add`.
-- Neovim is installed through Omarchy's package flow.
+- Neovim is built from the latest stable source release under `~/repos/neovim`.
 - GitHub CLI is installed as `github-cli`.
 - Ghostty, Hyprland scrolling layout, and UWSM zsh preferences are applied when their config files exist.
 - Legacy desktop configs such as i3, polybar, rofi, picom, and alacritty are not applied by default.
@@ -48,7 +48,7 @@ Ubuntu:
 - Base dependencies are installed through apt.
 - GitHub CLI is installed from GitHub's official Debian/Ubuntu apt repository.
 - Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm.
-- Neovim is built from source under `~/repos/neovim` because Ubuntu packages are usually outdated.
+- Neovim is built from the latest stable source release under `~/repos/neovim` because Ubuntu packages are usually outdated.
 - Yazi is installed from Snap with classic confinement.
 - opencode2 is installed globally via npm.
 - The old i3 desktop stack is opt-in with `--desktop i3`.
@@ -58,7 +58,7 @@ Raspberry Pi OS (64-bit, Trixie, Pi 4 or Pi 5):
 - Base dependencies are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`.
 - GitHub CLI is installed from GitHub's official apt repository.
 - Node.js 24 is installed from the NodeSource apt repository, which includes npm.
-- Neovim is built from source under `~/repos/neovim`.
+- Neovim is built from the latest stable source release under `~/repos/neovim`.
 - Yazi is installed from the upstream `aarch64` `.deb` release asset.
 - `uv` is installed via the Astral installer script.
 - opencode2 is installed globally via npm.
@@ -91,6 +91,14 @@ Install only selected config packages:
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --skip-packages --configs zsh,nvim,tmux
 ```
+
+Install or refresh Neovim and apply only its configuration:
+
+```bash
+~/dotfiles/setup_scripts/setup.sh --configs nvim
+```
+
+This still installs the platform packages needed to build Neovim. Do not add `--skip-packages` when a Neovim build is required.
 
 Install the optional Ubuntu i3 desktop stack:
 
@@ -138,13 +146,15 @@ The top-level setup applies these configs by default:
 - `scripts`: links repo helper scripts to `~/scripts`.
 - `agents`: links agent skills to `~/.agents`.
 
-## Ubuntu and Raspberry Pi Neovim Build
+## Neovim Build
 
-On Ubuntu and Raspberry Pi OS, setup installs build dependencies, then clones or updates Neovim in `~/repos/neovim` and runs:
+On every supported platform, setup resolves Neovim's newest stable `vX.Y.Z` tag, checks it out in `~/repos/neovim`, and runs:
 
 ```bash
+sudo make -C ~/repos/neovim distclean
+sudo rm -rf /usr/local/share/nvim/runtime
 make -C ~/repos/neovim CMAKE_BUILD_TYPE=Release
-sudo make -C ~/repos/neovim install
+sudo cmake --install ~/repos/neovim/build
 ```
 
 ## More Details
