@@ -113,7 +113,7 @@ Use the config installer directly when packages are already handled:
 ```bash
 ~/dotfiles/scripts/dotfiles.sh list
 ~/dotfiles/scripts/dotfiles.sh --dry-run install zsh nvim tmux
-~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents opencode
 ~/dotfiles/scripts/dotfiles.sh install all
 ```
 
@@ -145,6 +145,7 @@ The top-level setup applies these configs by default:
 - `tmux`: links `.tmux.conf` and installs tmux plugins with TPM.
 - `scripts`: links repo helper scripts to `~/scripts`.
 - `agents`: links agent skills to `~/.agents`.
+- `opencode`: links the OpenCode CLI configuration (`opencode.jsonc`) to `~/.config/opencode/opencode.jsonc`, setting the default model and the `build`/`plan`/`explore`/`scout` agents.
 
 ## Neovim Build
 
