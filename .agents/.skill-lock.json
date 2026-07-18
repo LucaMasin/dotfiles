@@ -1,0 +1,26 @@
+{
+  "version": 3,
+  "skills": {
+    "python-design-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/python-development/skills/python-design-patterns/SKILL.md",
+      "skillFolderHash": "a3d004c3b778ed0cb3a64a97aa942df06ac7a0db",
+      "installedAt": "2026-07-18T18:38:29.702Z",
+      "updatedAt": "2026-07-18T18:38:29.702Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "76a98a285cb0434f3d39e1a873823556330e398b",
+      "installedAt": "2026-07-18T18:38:46.607Z",
+      "updatedAt": "2026-07-18T18:38:46.607Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  }
+}
