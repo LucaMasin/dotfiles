@@ -376,6 +376,17 @@ install_opencode2() {
     return 0
   fi
 
+  # Switch to a user-owned npm prefix when the default points outside
+  # $HOME (e.g. /usr on apt-installed Node), so the global install
+  # does not require sudo.
+  local prefix
+  prefix="$(npm config get prefix 2>/dev/null || true)"
+  if [[ -n "$prefix" && "$prefix" != "$HOME"/* ]]; then
+    mkdir -p "$HOME/.npm-global"
+    npm config set prefix "$HOME/.npm-global"
+    printf 'configured npm prefix to %s (previous %s was outside $HOME)\n' "$HOME/.npm-global" "$prefix"
+  fi
+
   run_shell 'install opencode2 with npm' 'npm install -g @opencode-ai/cli@next'
 }
 

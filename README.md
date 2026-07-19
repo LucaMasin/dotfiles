@@ -50,7 +50,7 @@ Ubuntu:
 - Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm.
 - Neovim is built from the latest stable source release under `~/repos/neovim` because Ubuntu packages are usually outdated.
 - Yazi is installed from Snap with classic confinement.
-- opencode2 is installed globally via npm.
+- opencode2 is installed globally via npm; setup switches to a user-owned `~/.npm-global` prefix when the default points outside `$HOME`, so the install does not need sudo.
 - The old i3 desktop stack is opt-in with `--desktop i3`.
 
 Raspberry Pi OS (64-bit, Trixie, Pi 4 or Pi 5):
@@ -61,7 +61,7 @@ Raspberry Pi OS (64-bit, Trixie, Pi 4 or Pi 5):
 - Neovim is built from the latest stable source release under `~/repos/neovim`.
 - Yazi is installed from the upstream `aarch64` `.deb` release asset.
 - `uv` is installed via the Astral installer script.
-- opencode2 is installed globally via npm.
+- opencode2 is installed globally via npm; setup switches to a user-owned `~/.npm-global` prefix when the default points outside `$HOME`, so the install does not need sudo.
 - Platform detection requires a Raspberry Pi 4 or Pi 5, `aarch64`, and `/etc/os-release` codename `trixie`.
 
 ## Common Commands
