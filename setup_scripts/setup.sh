@@ -333,7 +333,9 @@ install_user_tools() {
     run pipx install poetry
   fi
 
+  install_opencode
   install_opencode2
+  install_browser_control
 }
 
 install_yazi_from_snap() {
@@ -359,6 +361,15 @@ install_cargo_tool() {
     "source \"$HOME/.cargo/env\" 2>/dev/null || true; cargo install --locked $*"
 }
 
+install_opencode() {
+  if command -v opencode >/dev/null 2>&1; then
+    printf 'opencode already installed\n'
+    return 0
+  fi
+
+  run_shell 'install opencode via official installer' 'curl -fsSL https://opencode.ai/install | bash'
+}
+
 install_opencode2() {
   if command -v opencode2 >/dev/null 2>&1; then
     printf 'opencode2 already installed\n'
@@ -366,6 +377,41 @@ install_opencode2() {
   fi
 
   run_shell 'install opencode2 with npm' 'npm install -g @opencode-ai/cli@next'
+}
+
+install_browser_control() {
+  if command -v browser-control >/dev/null 2>&1; then
+    printf 'browser-control already installed\n'
+    return 0
+  fi
+
+  printf 'Installing browser-control\n'
+
+  if ! command -v pnpm >/dev/null 2>&1; then
+    run_shell 'enable pnpm via corepack' 'corepack enable pnpm'
+  else
+    printf 'pnpm already installed\n'
+  fi
+
+  if ! command -v bun >/dev/null 2>&1; then
+    run_shell 'install bun' 'curl -fsSL https://bun.sh/install | bash'
+  else
+    printf 'bun already installed\n'
+  fi
+
+  local repo_dir="$HOME/repos/browser-control"
+  mkdir -p -- "$HOME/repos"
+  if [[ ! -d $repo_dir/.git ]]; then
+    run_shell 'clone browser-control repo' "git clone git@github.com:anomalyco/browser-control.git '$repo_dir'"
+  else
+    printf 'browser-control repo already cloned at %s\n' "$repo_dir"
+  fi
+
+  run_shell 'install browser-control dependencies' "(cd '$repo_dir' && pnpm install)"
+  run_shell 'build browser-control' "(cd '$repo_dir' && pnpm build)"
+  run_shell 'link browser-control globally' "(cd '$repo_dir' && bun link)"
+
+  printf 'Load the unpacked extension from %s/extension/dist in your Chromium-family browser, then run `browser-control execute` to start the relay.\n' "$repo_dir"
 }
 
 install_omarchy_packages() {
@@ -376,7 +422,9 @@ install_omarchy_packages() {
   printf 'Installing Omarchy packages\n'
   run omarchy pkg add "${OMARCHY_PACKAGES[@]}"
   install_neovim_from_source
+  install_opencode
   install_opencode2
+  install_browser_control
 }
 
 install_raspberrypi_packages() {
@@ -409,7 +457,9 @@ install_pi_user_tools() {
     run pipx install poetry
   fi
 
+  install_opencode
   install_opencode2
+  install_browser_control
 }
 
 install_yazi_from_deb() {
