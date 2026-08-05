@@ -158,6 +158,22 @@ make -C ~/repos/neovim CMAKE_BUILD_TYPE=Release
 sudo cmake --install ~/repos/neovim/build
 ```
 
+## Optional: Tailnet-only OpenCode Web
+
+Expose the OpenCode web UI over HTTPS to devices in your Tailscale tailnet only. Opt in per machine; nothing is installed or started on machines that do not run this:
+
+```bash
+~/dotfiles/setup_scripts/opencode_web.sh enable
+```
+
+- Access: `https://<hostname>.<tailnet>.ts.net` (tailnet devices only, HTTPS with Basic auth).
+- OpenCode binds to `127.0.0.1:4096`; LAN and raw Tailscale-IP access are not exposed.
+- Credentials live in `~/.config/opencode/server.env` (mode 600, outside the repo).
+- The helper refuses to replace or remove an unrelated Tailscale Serve root endpoint.
+- One-time tailnet step: enable Serve for the node in the Tailscale admin console when prompted, then rerun `enable`.
+- Lifecycle: `~/dotfiles/setup_scripts/opencode_web.sh status` and `disable`.
+- The `opencode-web` dotfiles package is disabled by default and installed only by the helper.
+
 ## More Details
 
 See `SETUP.md` for lower-level examples and manifest details.

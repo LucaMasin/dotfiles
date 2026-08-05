@@ -25,6 +25,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 - `auto_install.sh`, `setup_scripts/setup.sh` without `--dry-run`, or `setup_scripts/update.sh` without `--dry-run`; they can install packages, pull the repo, modify home-directory config, or run `sudo`.
 - `scripts/dotfiles.sh install ...` without `--dry-run`; it creates symlinks, edits shell rc files, backs up targets, and installs tmux plugins.
 - `setup_scripts/generate_github_ssh.sh`; it touches SSH/GitHub credentials.
+- `setup_scripts/opencode_web.sh enable` or `disable` without `--dry-run`; it writes credentials, installs/starts a user systemd service, enables systemd lingering, and configures Tailscale Serve.
 
 ## Config Installer Facts
 
@@ -33,6 +34,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 - Default setup applies `zsh nvim tmux scripts agents opencode`; `--configs all` installs enabled packages only.
 - Existing targets are backed up under `${XDG_STATE_HOME:-~/.local/state}/dotfiles-backup/<timestamp>/` before replacement or source-block rewrite.
 - Disabled desktop configs (`alacritty`, `i3`, `polybar`, `picom`, `rofi`, `zathura`) are documented in the manifest; enable there or use `--force-disabled` only intentionally.
+- `opencode-web` links the opt-in OpenCode web systemd user unit (`~/.config/systemd/user/opencode-web.service`); it is disabled in the manifest so shared machines are unaffected, and is activated only via `setup_scripts/opencode_web.sh enable`, which force-installs it, writes `~/.config/opencode/server.env` (mode 600), enables linger, and configures `tailscale serve` (tailnet-only HTTPS, bound to 127.0.0.1).
 - Ubuntu i3 setup is opt-in via `setup_scripts/setup.sh --platform ubuntu --desktop i3`, which force-installs the disabled legacy desktop configs.
 
 ## Platform Gotchas

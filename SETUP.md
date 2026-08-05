@@ -173,6 +173,47 @@ Omarchy's current Alacritty config imports the active Omarchy theme. Replacing i
 
 To enable a disabled package, change its manifest line from `false` to `true`. You can also force one install with `--force-disabled`, but prefer enabling it explicitly so the decision is documented.
 
+## Tailnet-only OpenCode Web
+
+Optional and per-machine: exposes the OpenCode web UI over HTTPS to devices in your Tailscale tailnet. Run once per machine you want it on:
+
+```bash
+~/dotfiles/setup_scripts/opencode_web.sh enable
+```
+
+What it does:
+
+- Writes `~/.config/opencode/server.env` (mode 600) with a generated password, preserving an existing file.
+- Installs the `opencode-web` systemd user unit from `dotfiles-manifest.conf` (disabled by default; installed with `--force-disabled`).
+- Enables and starts `opencode-web.service`, which runs `opencode serve` bound to `127.0.0.1:4096` only.
+- Enables systemd lingering for the current user, so the service starts at boot, before login.
+- Runs `tailscale serve --bg http://127.0.0.1:4096` for tailnet-only HTTPS.
+- Refuses to replace an existing Tailscale Serve root handler that points somewhere else.
+
+One-time tailnet step: the first `enable` may print a link to the Tailscale admin console asking you to enable Serve for the node. Do that, then rerun `enable`.
+
+Access:
+
+```text
+Tailnet only:     https://<hostname>.<tailnet>.ts.net
+Local diagnostics: http://127.0.0.1:4096
+Not exposed:       LAN interfaces and the raw Tailscale IP
+```
+
+The Basic-auth password protects the web UI, but anyone holding it can operate OpenCode as your user. Rotate it by editing `~/.config/opencode/server.env` and restarting:
+
+```bash
+systemctl --user restart opencode-web
+```
+
+Removal:
+
+```bash
+~/dotfiles/setup_scripts/opencode_web.sh disable
+```
+
+This removes the Tailscale Serve endpoint first, then stops and disables the unit. Failures are reported instead of being treated as success, and an unrelated Serve root handler is never removed. It keeps `~/.config/opencode/server.env` and systemd lingering, so other user services are unaffected.
+
 ## Manifest Format
 
 Each non-comment line uses this format:

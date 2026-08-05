@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenCode web server (Tailscale-only)
+Documentation=https://opencode.ai/docs/web/
+
+[Service]
+Type=simple
+ExecStart=%h/.opencode/bin/opencode serve --hostname 127.0.0.1 --port 4096
+EnvironmentFile=%h/.config/opencode/server.env
+Environment=PATH=%h/.opencode/bin:%h/.local/bin:%h/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=%h
+
+[Install]
+WantedBy=default.target
