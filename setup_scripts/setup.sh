@@ -399,7 +399,12 @@ install_browser_control() {
   printf 'Installing browser-control\n'
 
   if ! command -v pnpm >/dev/null 2>&1; then
-    run_shell 'enable pnpm via corepack' 'corepack enable pnpm'
+    local prefix
+    prefix="$(npm config get prefix 2>/dev/null || true)"
+    if [[ -z "$prefix" ]]; then
+      prefix="$HOME/.npm-global"
+    fi
+    run_shell 'enable pnpm via corepack' "corepack enable --install-directory \"$prefix/bin\" pnpm"
   else
     printf 'pnpm already installed\n'
   fi
@@ -413,7 +418,11 @@ install_browser_control() {
   local repo_dir="$HOME/repos/browser-control"
   mkdir -p -- "$HOME/repos"
   if [[ ! -d $repo_dir/.git ]]; then
-    run_shell 'clone browser-control repo' "git clone git@github.com:anomalyco/browser-control.git '$repo_dir'"
+    if command -v gh >/dev/null 2>&1; then
+      run_shell 'clone browser-control repo' "gh repo clone anomalyco/browser-control '$repo_dir'"
+    else
+      run_shell 'clone browser-control repo' "git clone git@github.com:anomalyco/browser-control.git '$repo_dir'"
+    fi
   else
     printf 'browser-control repo already cloned at %s\n' "$repo_dir"
   fi
