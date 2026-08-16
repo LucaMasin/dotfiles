@@ -533,14 +533,71 @@ Alacritty.desktop
 EOF
 }
 
-configure_hyprland_scrolling_layout() {
-  local target="$HOME/.config/hypr/looknfeel.conf"
-  local tmp_file in_general found
+configure_hyprland_monitor_scale() {
+  local target="$HOME/.config/hypr/monitors.lua"
+  local tmp_file
 
   [[ $PLATFORM == omarchy ]] || return 0
   [[ -e $target ]] || return 0
 
-  if grep -Eq '^[[:space:]]*layout[[:space:]]*=[[:space:]]*scrolling[[:space:]]*$' "$target"; then
+  if grep -Fxq 'local omarchy_monitor_scale = 1' "$target"; then
+    printf 'Hyprland monitor scale already configured in %s\n' "$target"
+    return 0
+  fi
+
+  printf 'Configuring Hyprland monitor scale as 1x in %s\n' "$target"
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: set omarchy_monitor_scale = 1 in %s\n' "$target"
+    return 0
+  fi
+
+  tmp_file="$(mktemp)"
+  while IFS= read -r line || [[ -n $line ]]; do
+    if [[ $line =~ ^local[[:space:]]+omarchy_monitor_scale[[:space:]]*= ]]; then
+      printf 'local omarchy_monitor_scale = 1\n' >>"$tmp_file"
+    else
+      printf '%s\n' "$line" >>"$tmp_file"
+    fi
+  done <"$target"
+  mv -- "$tmp_file" "$target"
+}
+
+configure_ghostty_font_size() {
+  local target="$HOME/.config/ghostty/config"
+  local tmp_file
+
+  [[ $PLATFORM == omarchy ]] || return 0
+  [[ -e $target ]] || return 0
+
+  if grep -Fxq 'font-size = 10' "$target"; then
+    printf 'Ghostty font size already configured in %s\n' "$target"
+    return 0
+  fi
+
+  printf 'Configuring Ghostty font size as 10 in %s\n' "$target"
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: set font-size = 10 in %s\n' "$target"
+    return 0
+  fi
+
+  tmp_file="$(mktemp)"
+  while IFS= read -r line || [[ -n $line ]]; do
+    if [[ $line =~ ^font-size[[:space:]]*= ]]; then
+      printf 'font-size = 10\n' >>"$tmp_file"
+    else
+      printf '%s\n' "$line" >>"$tmp_file"
+    fi
+  done <"$target"
+  mv -- "$tmp_file" "$target"
+}
+
+configure_hyprland_scrolling_layout() {
+  local target="$HOME/.config/hypr/looknfeel.lua"
+
+  [[ $PLATFORM == omarchy ]] || return 0
+  [[ -e $target ]] || return 0
+
+  if grep -Eq '^[[:space:]]*layout[[:space:]]*=[[:space:]]*"scrolling",?[[:space:]]*$' "$target"; then
     printf 'Hyprland scrolling layout already configured in %s\n' "$target"
     return 0
   fi
@@ -548,33 +605,18 @@ configure_hyprland_scrolling_layout() {
   printf 'Configuring Hyprland default layout as scrolling in %s\n' "$target"
 
   if [[ $DRY_RUN == true ]]; then
-    printf 'dry-run: enable layout = scrolling in %s\n' "$target"
+    printf 'dry-run: enable layout = "scrolling" in %s\n' "$target"
     return 0
   fi
 
-  tmp_file="$(mktemp)"
-  in_general=false
-  found=false
+  cat >>"$target" <<'EOF'
 
-  while IFS= read -r line || [[ -n $line ]]; do
-    if [[ $line =~ ^[[:space:]]*general[[:space:]]*\{[[:space:]]*$ ]]; then
-      in_general=true
-    elif [[ $in_general == true && $line =~ ^[[:space:]]*#[[:space:]]*layout[[:space:]]*=[[:space:]]*scrolling[[:space:]]*$ ]]; then
-      printf '    layout = scrolling\n' >>"$tmp_file"
-      found=true
-      continue
-    elif [[ $in_general == true && $line =~ ^[[:space:]]*\}[[:space:]]*$ ]]; then
-      if [[ $found == false ]]; then
-        printf '    layout = scrolling\n' >>"$tmp_file"
-        found=true
-      fi
-      in_general=false
-    fi
-
-    printf '%s\n' "$line" >>"$tmp_file"
-  done <"$target"
-
-  mv -- "$tmp_file" "$target"
+hl.config({
+  general = {
+    layout = "scrolling",
+  },
+})
+EOF
 }
 
 reload_hyprland() {
@@ -662,6 +704,8 @@ main() {
   if [[ $PLATFORM == omarchy ]]; then
     configure_omarchy_zsh_shell
     configure_default_terminal
+    configure_hyprland_monitor_scale
+    configure_ghostty_font_size
     configure_hyprland_scrolling_layout
     reload_hyprland
   fi

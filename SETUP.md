@@ -36,12 +36,16 @@ On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed 
 
 On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from the latest stable source release under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script. opencode2 is installed globally via npm; if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo.
 
-On Omarchy, Neovim is built from the latest stable source release under `~/repos/neovim`. Setup also configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`.
+On Omarchy, Neovim is built from the latest stable source release under `~/repos/neovim`. Setup configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`, sets Ghostty's font size to 10, and sets the Hyprland monitor scale to 1x.
 
-It also enables Hyprland's scrolling layout as the default by setting this in `~/.config/hypr/looknfeel.conf`:
+It also enables Hyprland's scrolling layout as the default by adding this to `~/.config/hypr/looknfeel.lua`:
 
-```text
-layout = scrolling
+```lua
+hl.config({
+  general = {
+    layout = "scrolling",
+  },
+})
 ```
 
 Omarchy packages:
