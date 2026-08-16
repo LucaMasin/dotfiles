@@ -12,6 +12,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("vim-options")
+require("config.remote_clipboard").setup()
 require("lazy").setup("plugins")
 
 --require("nordic.nvim").setup()
