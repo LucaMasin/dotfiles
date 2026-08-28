@@ -11,11 +11,11 @@
       "reasoningEffort": "high"
     },
     "explore": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "opencode-go/deepseek-v4-flash",
       "reasoningEffort": "max"
     },
     "scout": {
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "opencode-go/deepseek-v4-flash",
       "reasoningEffort": "max"
     }
   }
