@@ -3,7 +3,7 @@ return { -- Highlight, edit, and navigate code
     branch = 'master',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'python', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'python', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'odin', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {

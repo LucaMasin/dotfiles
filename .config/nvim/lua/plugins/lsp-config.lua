@@ -266,6 +266,8 @@ return { -- LSP Configuration & Plugins
 					},
 				},
 			},
+
+			ols = {},
 		}
 
 		-- Ensure the servers and tools above are installed
