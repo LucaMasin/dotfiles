@@ -179,7 +179,7 @@ To enable a disabled package, change its manifest line from `false` to `true`. Y
 
 ## Tailnet-only OpenCode Web
 
-Optional and per-machine: exposes the OpenCode web UI over HTTPS to devices in your Tailscale tailnet. Run once per machine you want it on:
+Optional and per-machine: exposes the OpenCode V2 web UI over HTTPS to devices in your Tailscale tailnet. Run once per machine you want it on. Works on Omarchy, Ubuntu, and Raspberry Pi; Tailscale must be installed and logged in (`tailscale up`):
 
 ```bash
 ~/dotfiles/setup_scripts/opencode_web.sh enable
@@ -188,26 +188,27 @@ Optional and per-machine: exposes the OpenCode web UI over HTTPS to devices in y
 What it does:
 
 - Writes `~/.config/opencode/server.env` (mode 600) with a generated password, preserving an existing file.
-- Installs the `opencode-web` systemd user unit from `dotfiles-manifest.conf` (disabled by default; installed with `--force-disabled`).
-- Enables and starts `opencode-web.service`, which runs `opencode serve` bound to `127.0.0.1:4096` only.
+- Installs the `opencode2-web` systemd user unit from `dotfiles-manifest.conf` (disabled by default; installed with `--force-disabled`).
+- Enables and starts `opencode2-web.service`, which runs `opencode2 serve` bound to `127.0.0.1:4097` only.
 - Enables systemd lingering for the current user, so the service starts at boot, before login.
-- Runs `tailscale serve --bg http://127.0.0.1:4096` for tailnet-only HTTPS.
-- Refuses to replace an existing Tailscale Serve root handler that points somewhere else.
+- Proxies V2 on Tailscale Serve HTTPS port `443`.
+- Refuses to replace an existing Tailscale Serve root handler on HTTPS `443` that points somewhere else.
+- Retires the old V1/dual setup: stops `opencode-web.service`, removes its symlink when it points into this repo (or dangles), and removes legacy Serve endpoints (V1 on 443, old V2 on 8443).
 
 One-time tailnet step: the first `enable` may print a link to the Tailscale admin console asking you to enable Serve for the node. Do that, then rerun `enable`.
 
 Access:
 
 ```text
-Tailnet only:     https://<hostname>.<tailnet>.ts.net
-Local diagnostics: http://127.0.0.1:4096
-Not exposed:       LAN interfaces and the raw Tailscale IP
+V2 tailnet only: https://<hostname>.<tailnet>.ts.net
+V2 local:        http://127.0.0.1:4097
+Not exposed:     LAN interfaces and the raw Tailscale IP
 ```
 
 The Basic-auth password protects the web UI, but anyone holding it can operate OpenCode as your user. Rotate it by editing `~/.config/opencode/server.env` and restarting:
 
 ```bash
-systemctl --user restart opencode-web
+systemctl --user restart opencode2-web
 ```
 
 Removal:
@@ -216,7 +217,7 @@ Removal:
 ~/dotfiles/setup_scripts/opencode_web.sh disable
 ```
 
-This removes the Tailscale Serve endpoint first, then stops and disables the unit. Failures are reported instead of being treated as success, and an unrelated Serve root handler is never removed. It keeps `~/.config/opencode/server.env` and systemd lingering, so other user services are unaffected.
+This removes the Tailscale Serve endpoint first (plus the retired V2 endpoint on 8443 when present), then stops and disables the unit. Failures are reported instead of being treated as success, and an unrelated Serve root handler is never removed. It keeps `~/.config/opencode/server.env` and systemd lingering, so other user services are unaffected.
 
 ## Manifest Format
 
