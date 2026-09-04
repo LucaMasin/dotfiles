@@ -1,0 +1,87 @@
+# Herdr config — mirrors ~/.tmux.conf bindings where possible
+# Docs: https://herdr.dev/docs/configuration/ and https://herdr.dev/docs/config-reference/
+# Reload after edits: herdr server reload-config  (or prefix+r)
+
+onboarding = false
+
+[theme]
+# tmux uses fabioluciano/tmux-powerkit theme "tokyo-night" variant "night"
+# Herdr built-in equivalent:
+name = "tokyo-night"
+
+[terminal]
+# Inherit shell from $SHELL, same as tmux default. Keep working-dir
+# inheritance like tmux's -c flag does in sessionizer scripts.
+new_cwd = "follow"
+
+[ui]
+mouse_capture = true
+copy_on_select = true
+pane_borders = true
+pane_scrollbars = true
+# Keep sidebar behavior close to tmux status bar; herdr sidebar is extra UI
+# that tmux doesn't have — leave defaults otherwise.
+
+[keys]
+# tmux: set -g prefix C-z
+prefix = "ctrl+z"
+
+# tmux: bind r source-file ~/.config/tmux/tmux.conf  (reload)
+# herdr default is prefix+shift+r; mirror tmux's prefix+r
+reload_config = "prefix+r"
+help = "prefix+?"
+
+# tmux: bind | split-window -h   (vertical split, side-by-side)
+# tmux: bind - split-window -v   (horizontal split, stacked)
+# herdr naming is opposite of tmux flag naming but same geometry:
+#   split_vertical   -> side-by-side (herdr) == tmux -h
+#   split_horizontal -> stacked (herdr)       == tmux -v
+split_vertical = "prefix+|"
+split_horizontal = "prefix+minus"
+
+# Keep vim-style pane navigation (tmux not configured but common expectation)
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+
+swap_pane_left = "prefix+shift+h"
+swap_pane_down = "prefix+shift+j"
+swap_pane_up = "prefix+shift+k"
+swap_pane_right = "prefix+shift+l"
+
+# Tabs map to tmux windows: prefix+c (new), prefix+n/p (next/prev), prefix+1..9
+new_tab = "prefix+c"
+next_tab = "prefix+n"
+previous_tab = "prefix+p"
+switch_tab = "prefix+1..9"
+rename_tab = "prefix+shift+t"
+close_tab = "prefix+shift+x"
+
+# Workspaces map to tmux sessions
+new_workspace = "prefix+shift+n"
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+shift+d"
+workspace_picker = "prefix+w"
+goto = "prefix+g"
+
+# Panes
+close_pane = "prefix+x"
+zoom = "prefix+z"
+copy_mode = "prefix+["
+toggle_sidebar = "prefix+b"
+detach = "prefix+q"
+# tmux has no resize mode; Herdr default is prefix+r. We move it to
+# prefix+shift+r so prefix+r can mirror tmux's reload.
+resize_mode = "prefix+shift+r"
+
+# Optional: keep Herdr's navigate-mode vim keys (used when sidebar Navigate is open)
+navigate_pane_left = "h"
+navigate_pane_down = "j"
+navigate_pane_up = "k"
+navigate_pane_right = "l"
+navigate_workspace_up = "up"
+navigate_workspace_down = "down"
+
+# Keep direct-attach helper similar to tmux detach vs herdr detach
+# All other herdr defaults (prefix+w, prefix+g, etc.) stay as documented.

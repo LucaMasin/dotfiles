@@ -40,6 +40,7 @@ Omarchy:
 - Packages are installed through `omarchy pkg add`.
 - Neovim is built from the latest stable source release under `~/repos/neovim`.
 - GitHub CLI is installed as `github-cli`.
+- Herdr is installed via `https://herdr.dev/install.sh`.
 - Ghostty, Hyprland scrolling layout, and UWSM zsh preferences are applied when their config files exist.
 - Legacy desktop configs such as i3, polybar, rofi, picom, and alacritty are not applied by default.
 
@@ -51,6 +52,7 @@ Ubuntu:
 - Neovim is built from the latest stable source release under `~/repos/neovim` because Ubuntu packages are usually outdated.
 - Yazi is installed from Snap with classic confinement.
 - opencode2 is installed globally via npm; setup switches to a user-owned `~/.npm-global` prefix when the default points outside `$HOME`, so the install does not need sudo.
+- Herdr is installed via `https://herdr.dev/install.sh`.
 - The old i3 desktop stack is opt-in with `--desktop i3`.
 
 Raspberry Pi OS (64-bit, Trixie, Pi 4 or Pi 5):
@@ -62,6 +64,7 @@ Raspberry Pi OS (64-bit, Trixie, Pi 4 or Pi 5):
 - Yazi is installed from the upstream `aarch64` `.deb` release asset.
 - `uv` is installed via the Astral installer script.
 - opencode2 is installed globally via npm; setup switches to a user-owned `~/.npm-global` prefix when the default points outside `$HOME`, so the install does not need sudo.
+- Herdr is installed via `https://herdr.dev/install.sh`.
 - Platform detection requires a Raspberry Pi 4 or Pi 5, `aarch64`, and `/etc/os-release` codename `trixie`.
 
 ## Common Commands
@@ -143,6 +146,7 @@ The top-level setup applies these configs by default:
 - `zsh`: sources `zsh_config` and `shell_config` from `~/.zshrc`.
 - `nvim`: links `.config/nvim` to `~/.config/nvim`.
 - `tmux`: links `.tmux.conf` and installs tmux plugins with TPM.
+- `herdr`: links `.config/herdr` to `~/.config/herdr` (C-z prefix, `|`/`-` splits, tokyo-night theme, mirrors tmux).
 - `scripts`: links repo helper scripts to `~/scripts`.
 - `agents`: links agent skills to `~/.agents`.
 - `opencode`: links the OpenCode CLI configuration (`opencode.jsonc`) to `~/.config/opencode/opencode.jsonc`, setting the default model and the `build`/`plan`/`explore`/`scout` agents.

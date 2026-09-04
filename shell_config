@@ -6,7 +6,8 @@ alias c="clear"
 alias lsa="ls -lah"
 alias ll='ls -l'
 alias h='history'
-alias ts='~/scripts/tmux-sessionizer.sh'
+alias hs='python3 ~/scripts/tsesh.py --herdr'
+alias hsesh='python3 ~/scripts/tsesh.py --herdr'
 
 # Conda shortcuts
 alias ca="conda activate"
@@ -44,6 +45,16 @@ if [[ -n ${ZSH_VERSION:-} ]]; then
 
     if command -v uvx &> /dev/null; then
         eval "$(uvx --generate-shell-completion zsh)"
+    fi
+
+    if command -v herdr &> /dev/null; then
+        eval "$(herdr completion zsh)"
+    fi
+fi
+
+if [[ -n ${BASH_VERSION:-} ]]; then
+    if command -v herdr &> /dev/null; then
+        eval "$(herdr completion bash)"
     fi
 fi
 

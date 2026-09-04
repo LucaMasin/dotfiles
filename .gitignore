@@ -1,3 +1,10 @@
 .config/nvim/lazy-lock.json
 .agents/skills/omarchy
 *.pyc
+
+# Herdr runtime state written into the linked config dir (manifest links
+# ~/.config/herdr -> repo); only config.toml is tracked.
+.config/herdr/*.sock
+.config/herdr/*.log
+.config/herdr/session.json
+.config/herdr/.plugins.lock

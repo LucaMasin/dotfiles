@@ -29,14 +29,14 @@ Or pass the platform explicitly:
 The setup script installs platform packages, then runs the default config install:
 
 ```bash
-~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents opencode starship
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux herdr scripts agents opencode starship
 ```
 
-On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from the latest stable source release under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode2 is installed globally via npm; if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo.
+On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from the latest stable source release under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode2 is installed globally via npm; if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo. Herdr is installed via `https://herdr.dev/install.sh`.
 
-On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from the latest stable source release under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script. opencode2 is installed globally via npm; if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo.
+On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from the latest stable source release under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script. opencode2 is installed globally via npm; if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo. Herdr is installed via `https://herdr.dev/install.sh`.
 
-On Omarchy, Neovim is built from the latest stable source release under `~/repos/neovim`. Setup configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`, sets Ghostty's font size to 10, and sets the Hyprland monitor scale to 1x.
+On Omarchy, Neovim is built from the latest stable source release under `~/repos/neovim`. Herdr is installed via `https://herdr.dev/install.sh`. Setup configures Ghostty as the default terminal for `xdg-terminal-exec`, with Alacritty kept as a fallback in `~/.config/xdg-terminals.list`, sets Ghostty's font size to 10, and sets the Hyprland monitor scale to 1x.
 
 It also enables Hyprland's scrolling layout as the default by adding this to `~/.config/hypr/looknfeel.lua`:
 

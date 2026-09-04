@@ -7,7 +7,7 @@ PLATFORM=""
 DRY_RUN=false
 SKIP_PACKAGES=false
 DESKTOP="none"
-CONFIGS=(zsh nvim tmux scripts agents opencode starship)
+CONFIGS=(zsh nvim tmux herdr scripts agents opencode starship)
 NODE_MAJOR=24
 NEOVIM_REPOSITORY="https://github.com/neovim/neovim.git"
 
@@ -336,6 +336,7 @@ install_user_tools() {
   install_opencode
   install_opencode2
   install_browser_control
+  install_herdr
 }
 
 install_yazi_from_snap() {
@@ -434,6 +435,15 @@ install_browser_control() {
   printf 'Load the unpacked extension from %s/extension/dist in your Chromium-family browser, then run `browser-control execute` to start the relay.\n' "$repo_dir"
 }
 
+install_herdr() {
+  if command -v herdr >/dev/null 2>&1; then
+    printf 'herdr already installed\n'
+    return 0
+  fi
+
+  run_shell 'install Herdr' 'curl -fsSL https://herdr.dev/install.sh | sh'
+}
+
 install_omarchy_packages() {
   [[ $SKIP_PACKAGES == false ]] || { printf 'Skipping package installation\n'; return 0; }
 
@@ -445,6 +455,7 @@ install_omarchy_packages() {
   install_opencode
   install_opencode2
   install_browser_control
+  install_herdr
 }
 
 install_raspberrypi_packages() {
@@ -480,6 +491,7 @@ install_pi_user_tools() {
   install_opencode
   install_opencode2
   install_browser_control
+  install_herdr
 }
 
 install_yazi_from_deb() {
