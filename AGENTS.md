@@ -31,7 +31,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 
 - `dotfiles-manifest.conf` is the source of truth for installable config packages: `name|type|source|target|enabled|description`.
 - Supported manifest types are `link` for symlinks and `source` for managed source blocks.
-- Default setup applies `zsh nvim tmux scripts agents opencode`; `--configs all` installs enabled packages only.
+- Default setup applies `zsh nvim tmux scripts agents opencode starship`; `--configs all` installs enabled packages only.
 - Existing targets are backed up under `${XDG_STATE_HOME:-~/.local/state}/dotfiles-backup/<timestamp>/` before replacement or source-block rewrite.
 - Disabled desktop configs (`alacritty`, `i3`, `polybar`, `picom`, `rofi`, `zathura`) are documented in the manifest; enable there or use `--force-disabled` only intentionally.
 - `opencode-web` links the opt-in OpenCode web systemd user unit (`~/.config/systemd/user/opencode-web.service`); it is disabled in the manifest so shared machines are unaffected, and is activated only via `setup_scripts/opencode_web.sh enable`, which force-installs it, writes `~/.config/opencode/server.env` (mode 600), enables linger, and configures `tailscale serve` (tailnet-only HTTPS, bound to 127.0.0.1).

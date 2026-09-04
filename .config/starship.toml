@@ -1,0 +1,9 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Conda environments are shown by starship's [conda] module.
+# Disable conda's own PS1 prefix to avoid duplication:
+#   conda config --set changeps1 false
+# base env stays hidden; non-base envs show as `via 🅒 env`.
+
+[conda]
+ignore_base = true
