@@ -1,31 +1,18 @@
 # Dotfiles
 
-Personal Linux dotfiles for shell, Neovim, tmux, helper scripts, agent skills, and desktop-specific config.
-
-The repo has one setup flow with platform-specific package handling behind it:
-
-```text
-auto_install.sh          bootstrap: install git, clone/update repo, run setup
-setup_scripts/setup.sh   platform setup: packages/tools, then config
-setup_scripts/update.sh  update repo, then re-apply config without packages
-scripts/dotfiles.sh      config only: links/sources dotfiles-manifest.conf entries
-```
+Personal Linux dotfiles for zsh, Neovim, tmux, and helper scripts. One setup flow with platform-specific handling underneath.
 
 ## Quick Start
 
-Bootstrap a supported machine:
-
 ```bash
+# Bootstrap a new machine
 curl -Ss https://raw.githubusercontent.com/LucaMasin/dotfiles/refs/heads/main/auto_install.sh | bash
-```
 
-Or, after cloning manually:
-
-```bash
+# Or, after cloning manually
 ~/dotfiles/setup_scripts/setup.sh
 ```
 
-`setup.sh` auto-detects the platform when possible. Pass a platform only when you want to override detection:
+Running `setup.sh` without flags auto-detects the platform. Override only when needed:
 
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --platform omarchy
@@ -33,152 +20,54 @@ Or, after cloning manually:
 ~/dotfiles/setup_scripts/setup.sh --platform raspberrypi
 ```
 
+## Repository Structure
+
+```text
+~/dotfiles/
+├── auto_install.sh          # Bootstrap: install git, clone repo, run setup
+├── setup_scripts/setup.sh   # Platform packages + config
+├── setup_scripts/update.sh  # Pull repo, re-apply config
+├── scripts/dotfiles.sh      # Config-only installer
+├── dotfiles-manifest.conf   # Config package declarations
+├── SETUP.md                 # Full setup reference
+└── .config/nvim/            # Neovim configuration
+```
+
+## Usage
+
+```bash
+# Preview changes without touching the system
+~/dotfiles/setup_scripts/setup.sh --dry-run
+
+# Apply configs only, skip packages
+~/dotfiles/setup_scripts/setup.sh --skip-packages
+
+# Pull latest and re-apply configs
+~/dotfiles/setup_scripts/update.sh
+
+# Install selected configs only
+~/dotfiles/scripts/dotfiles.sh --dry-run install zsh nvim tmux
+~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux
+```
+
+Default configs: `zsh nvim tmux herdr scripts agents opencode starship`.
+
 ## Supported Platforms
 
-Omarchy:
+- **Omarchy** — via `omarchy pkg add`, Neovim built from source.
+- **Ubuntu** — via apt + NodeSource + Snap, Neovim built from source. Optional i3 stack with `--desktop i3`.
+- **Raspberry Pi OS** (64-bit Trixie, Pi 4/5) — via apt, Neovim built from source, Yazi from upstream `.deb`.
 
-- Packages are installed through `omarchy pkg add`.
-- Neovim is built from the latest stable source release under `~/repos/neovim`.
-- GitHub CLI is installed as `github-cli`.
-- Herdr is installed via `https://herdr.dev/install.sh`.
-- Ghostty, Hyprland scrolling layout, and UWSM zsh preferences are applied when their config files exist.
-- Legacy desktop configs such as i3, polybar, rofi, picom, and alacritty are not applied by default.
+See `SETUP.md` for package lists and platform details.
 
-Ubuntu:
+## Optional: OpenCode Web
 
-- Base dependencies are installed through apt.
-- GitHub CLI is installed from GitHub's official Debian/Ubuntu apt repository.
-- Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm.
-- Neovim is built from the latest stable source release under `~/repos/neovim` because Ubuntu packages are usually outdated.
-- Yazi is installed from Snap with classic confinement.
-- opencode2 is installed globally via npm; setup switches to a user-owned `~/.npm-global` prefix when the default points outside `$HOME`, so the install does not need sudo.
-- Herdr is installed via `https://herdr.dev/install.sh`.
-- The old i3 desktop stack is opt-in with `--desktop i3`.
-
-Raspberry Pi OS (64-bit, Trixie, Pi 4 or Pi 5):
-
-- Base dependencies are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`.
-- GitHub CLI is installed from GitHub's official apt repository.
-- Node.js 24 is installed from the NodeSource apt repository, which includes npm.
-- Neovim is built from the latest stable source release under `~/repos/neovim`.
-- Yazi is installed from the upstream `aarch64` `.deb` release asset.
-- `uv` is installed via the Astral installer script.
-- opencode2 is installed globally via npm; setup switches to a user-owned `~/.npm-global` prefix when the default points outside `$HOME`, so the install does not need sudo.
-- Herdr is installed via `https://herdr.dev/install.sh`.
-- Platform detection requires a Raspberry Pi 4 or Pi 5, `aarch64`, and `/etc/os-release` codename `trixie`.
-
-## Common Commands
-
-Preview the full setup:
-
-```bash
-~/dotfiles/setup_scripts/setup.sh --dry-run
-```
-
-Apply configs without installing packages:
-
-```bash
-~/dotfiles/setup_scripts/setup.sh --skip-packages
-```
-
-Pull the repo and re-apply config links/source blocks:
-
-```bash
-~/dotfiles/setup_scripts/update.sh
-```
-
-The repo does not use GNU stow anymore; `scripts/dotfiles.sh` manages symlinks from `dotfiles-manifest.conf`.
-
-Install only selected config packages:
-
-```bash
-~/dotfiles/setup_scripts/setup.sh --skip-packages --configs zsh,nvim,tmux
-```
-
-Install or refresh Neovim and apply only its configuration:
-
-```bash
-~/dotfiles/setup_scripts/setup.sh --configs nvim
-```
-
-This still installs the platform packages needed to build Neovim. Do not add `--skip-packages` when a Neovim build is required.
-
-Install the optional Ubuntu i3 desktop stack:
-
-```bash
-~/dotfiles/setup_scripts/setup.sh --platform ubuntu --desktop i3
-```
-
-## Config Installer
-
-Use the config installer directly when packages are already handled:
-
-```bash
-~/dotfiles/scripts/dotfiles.sh list
-~/dotfiles/scripts/dotfiles.sh --dry-run install zsh nvim tmux
-~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux scripts agents opencode starship
-~/dotfiles/scripts/dotfiles.sh install all
-```
-
-Config packages are declared in `dotfiles-manifest.conf`:
-
-```text
-name|type|source|target|enabled|description
-```
-
-Supported types:
-
-```text
-link    symlink source to target, backing up an existing target first
-source  insert a managed source block into an existing shell rc file
-```
-
-Backups go to:
-
-```text
-~/.local/state/dotfiles-backup/<timestamp>/
-```
-
-## Default Configs
-
-The top-level setup applies these configs by default:
-
-- `zsh`: sources `zsh_config` and `shell_config` from `~/.zshrc`.
-- `nvim`: links `.config/nvim` to `~/.config/nvim`.
-- `tmux`: links `.tmux.conf` and installs tmux plugins with TPM.
-- `herdr`: links `.config/herdr` to `~/.config/herdr` (C-z prefix, `|`/`-` splits, tokyo-night theme, mirrors tmux).
-- `scripts`: links repo helper scripts to `~/scripts`.
-- `agents`: links agent skills to `~/.agents`.
-- `opencode`: links the OpenCode CLI configuration (`opencode.jsonc`) to `~/.config/opencode/opencode.jsonc`, setting the default model and the `build`/`plan`/`explore`/`scout` agents.
-- `starship`: links `starship.toml` to `~/.config/starship.toml` for conda env display via starship (`base` hidden). Requires `conda config --set changeps1 false` to avoid conda's own `(env)` prefix duplicating the prompt.
-
-## Neovim Build
-
-On every supported platform, setup resolves Neovim's newest stable `vX.Y.Z` tag, checks it out in `~/repos/neovim`, and runs:
-
-```bash
-sudo make -C ~/repos/neovim distclean
-sudo rm -rf /usr/local/share/nvim/runtime
-make -C ~/repos/neovim CMAKE_BUILD_TYPE=Release
-sudo cmake --install ~/repos/neovim/build
-```
-
-## Optional: Tailnet-only OpenCode Web
-
-Expose the OpenCode web UI over HTTPS to devices in your Tailscale tailnet only. Opt in per machine; nothing is installed or started on machines that do not run this:
+Tailnet-only HTTPS for the OpenCode web UI, opt-in per machine:
 
 ```bash
 ~/dotfiles/setup_scripts/opencode_web.sh enable
 ```
 
-- Access: `https://<hostname>.<tailnet>.ts.net` (tailnet devices only, HTTPS with Basic auth).
-- OpenCode binds to `127.0.0.1:4096`; LAN and raw Tailscale-IP access are not exposed.
-- Credentials live in `~/.config/opencode/server.env` (mode 600, outside the repo).
-- The helper refuses to replace or remove an unrelated Tailscale Serve root endpoint.
-- One-time tailnet step: enable Serve for the node in the Tailscale admin console when prompted, then rerun `enable`.
-- Lifecycle: `~/dotfiles/setup_scripts/opencode_web.sh status` and `disable`.
-- The `opencode-web` dotfiles package is disabled by default and installed only by the helper.
-
 ## More Details
 
-See `SETUP.md` for lower-level examples and manifest details.
+See `SETUP.md` for the full reference (manifest format, backups, tmux, zsh, troubleshooting).

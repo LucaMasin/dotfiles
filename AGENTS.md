@@ -48,7 +48,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, package manife
 ## Editing Conventions
 
 - Keep diffs small and avoid mass-formatting personal config files.
-- Keep `README.md`, `SETUP.md`, and `AGENTS.md` updated when setup flow, commands, platforms, or agent-relevant constraints change.
+- Update `README.md` only when a user-facing setup flow changes critically; keep it simple and point to `SETUP.md` for details. Update `SETUP.md` and `AGENTS.md` when setup flow, commands, platforms, or agent-relevant constraints change.
 - For new bash scripts, match existing style: `#!/usr/bin/env bash`, `set -euo pipefail`, `snake_case` functions, quoted expansions, `[[ ... ]]` tests.
 - For Neovim changes, keep plugin specs under `.config/nvim/lua/plugins/**`; respect `.config/nvim/lua/.luarc.json` (`vim` global).
 - If adding a new config package, prefer one manifest line in `dotfiles-manifest.conf` over hard-coding installer logic.
