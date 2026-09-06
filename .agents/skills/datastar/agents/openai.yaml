@@ -1,0 +1,18 @@
+interface:
+  display_name: datastar
+  short_description: Build, review, debug, or refactor web applications using Datastar,
+    the hypermedia framework from Star Federation. Use when a task mentions Datastar,
+    data-star.dev, data-* Datastar attributes, signals, @get/@post/@put/@patch/@delete,
+    Server-Sent Events (SSE), PatchElements, PatchSignals, backend-driven UI, HTML-over-the-wire,
+    or a Datastar backend SDK. Prefer current official Datastar patterns over SPA-style
+    client state. Verify version-sensitive syntax against official docs when network
+    access is available.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
