@@ -334,7 +334,6 @@ install_user_tools() {
   fi
 
   install_opencode
-  install_opencode2
   install_browser_control
   install_herdr
 }
@@ -368,15 +367,6 @@ install_opencode() {
     return 0
   fi
 
-  run_shell 'install opencode via official installer' 'curl -fsSL https://opencode.ai/install | bash'
-}
-
-install_opencode2() {
-  if command -v opencode2 >/dev/null 2>&1; then
-    printf 'opencode2 already installed\n'
-    return 0
-  fi
-
   # Switch to a user-owned npm prefix when the default points outside
   # $HOME (e.g. /usr on apt-installed Node), so the global install
   # does not require sudo.
@@ -388,7 +378,7 @@ install_opencode2() {
     printf 'configured npm prefix to %s (previous %s was outside $HOME)\n' "$HOME/.npm-global" "$prefix"
   fi
 
-  run_shell 'install opencode2 with npm' 'npm install -g @opencode-ai/cli@next'
+  run_shell 'install opencode with npm' 'npm install -g @opencode/cli'
 }
 
 install_browser_control() {
@@ -453,7 +443,6 @@ install_omarchy_packages() {
   run omarchy pkg add "${OMARCHY_PACKAGES[@]}"
   install_neovim_from_source
   install_opencode
-  install_opencode2
   install_browser_control
   install_herdr
 }
@@ -489,7 +478,6 @@ install_pi_user_tools() {
   fi
 
   install_opencode
-  install_opencode2
   install_browser_control
   install_herdr
 }

@@ -3,9 +3,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 DOTFILES_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
-UNIT_NAME="opencode2-web.service"
-LEGACY_UNIT="opencode-web.service"
-LEGACY_LINK="$HOME/.config/systemd/user/opencode-web.service"
+UNIT_NAME="opencode-web.service"
+LEGACY_UNIT="opencode2-web.service"
+LEGACY_LINK="$HOME/.config/systemd/user/opencode2-web.service"
 ENV_FILE="$HOME/.config/opencode/server.env"
 SERVE_PORT=443
 SERVE_TARGET="http://127.0.0.1:4097"
@@ -26,7 +26,7 @@ Usage:
   ${0##*/} [--dry-run] enable|disable|status
 
 Commands:
-  enable   Install and start the tailnet-only OpenCode V2 web service.
+  enable   Install and start the tailnet-only OpenCode web service.
   disable  Stop the service and remove its Tailscale Serve endpoint.
   status   Show service, Serve, and access status.
 
@@ -102,7 +102,7 @@ write_env_file() {
 install_unit() {
   local args=()
   [[ $DRY_RUN == true ]] && args+=(--dry-run)
-  "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" --force-disabled install opencode2-web
+  "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" --force-disabled install opencode-web
   run systemctl --user daemon-reload
 }
 
@@ -184,7 +184,7 @@ configure_serve() {
 cleanup_legacy() {
   local link_target
 
-  # Stop the retired V1 unit; not an error when it was never installed.
+  # Stop the retired beta-era unit; not an error when it was never installed.
   if [[ $DRY_RUN == true ]]; then
     printf 'dry-run: systemctl --user disable --now %s\n' "$LEGACY_UNIT"
   elif ! systemctl --user disable --now "$LEGACY_UNIT" 2>/dev/null; then
@@ -193,7 +193,7 @@ cleanup_legacy() {
     printf 'Disabled legacy %s\n' "$LEGACY_UNIT"
   fi
 
-  # Remove the retired V1 symlink when it points into this repo or dangles.
+  # Remove the retired beta-era symlink when it points into this repo or dangles.
   if [[ -L $LEGACY_LINK ]]; then
     link_target="$(readlink -- "$LEGACY_LINK")"
     if [[ $link_target == "$DOTFILES_DIR"* || ! -e $LEGACY_LINK ]]; then
@@ -204,19 +204,19 @@ cleanup_legacy() {
     fi
   fi
 
-  # Remove the retired V2 endpoint without disturbing unrelated use of 8443.
+  # Remove the retired dual-stack endpoint without disturbing unrelated use of 8443.
   remove_serve_endpoint "$LEGACY_V2_PORT" "$SERVE_TARGET" true
   run systemctl --user daemon-reload
 }
 
 cmd_enable() {
-  require_cmds opencode2 tailscale systemctl loginctl timeout id
+  require_cmds opencode tailscale systemctl loginctl timeout id
   write_env_file
+  cleanup_legacy
   install_unit
   enable_linger
   run systemctl --user enable --now "$UNIT_NAME"
   configure_serve
-  cleanup_legacy
   cmd_status
 }
 
@@ -241,17 +241,12 @@ cmd_status() {
   printf '  %-24s enabled=%-8s active=%s\n' "$UNIT_NAME" \
     "$(systemctl --user is-enabled "$UNIT_NAME" 2>/dev/null || :)" \
     "$(systemctl --user is-active "$UNIT_NAME" 2>/dev/null || :)"
-  if [[ -L $LEGACY_LINK ]] || systemctl --user cat "$LEGACY_UNIT" >/dev/null 2>&1; then
-    printf '  %-24s enabled=%-8s active=%s (legacy V1, retired)\n' "$LEGACY_UNIT" \
-      "$(systemctl --user is-enabled "$LEGACY_UNIT" 2>/dev/null || :)" \
-      "$(systemctl --user is-active "$LEGACY_UNIT" 2>/dev/null || :)"
-  fi
   printf '\nTailscale Serve:\n'
   tailscale serve status
   printf '\nAccess (tailnet only):\n'
-  printf '  V2: https://%s\n' "$url"
+  printf '  https://%s\n' "$url"
   printf '\nLocal diagnostics:\n'
-  printf '  V2: http://127.0.0.1:%s\n' "$LOCAL_PORT"
+  printf '  http://127.0.0.1:%s\n' "$LOCAL_PORT"
   printf 'Credentials: %s\n' "$ENV_FILE"
   printf 'Logs: journalctl --user -u %s\n' "$UNIT_NAME"
 }
