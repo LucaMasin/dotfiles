@@ -32,7 +32,7 @@ The setup script installs platform packages, then runs the default config instal
 ~/dotfiles/scripts/dotfiles.sh install zsh nvim tmux herdr scripts agents opencode starship
 ```
 
-On Ubuntu, base packages are installed through apt. Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from the latest stable source release under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode is installed globally via npm (`@opencode/cli`); if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo. Herdr is installed via `https://herdr.dev/install.sh`.
+On Ubuntu, base packages are installed through apt, including `libnspr4` and `libnss3` for Playwright Chromium (`libnspr4.so` / `libnss3.so`). Node.js 24 LTS is installed from the NodeSource apt repository, which includes npm. Neovim is built from the latest stable source release under `~/repos/neovim` instead of installed from apt. Yazi is installed from Snap with classic confinement. opencode is installed globally via npm (`@opencode/cli`); if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo. Herdr is installed via `https://herdr.dev/install.sh`. Use the WSL-local Playwright Chromium at `~/.cache/ms-playwright/`, not the `chromium-browser` snap shim or a Windows browser, for browser automation.
 
 On Raspberry Pi OS (64-bit Trixie, Pi 4 or Pi 5), base packages are installed through apt, including `starship`, `zoxide`, `tokei`, and `fd-find`. Node.js 24 is installed from the NodeSource apt repository. Neovim is built from the latest stable source release under `~/repos/neovim`. Yazi is installed from the upstream `aarch64` `.deb` release asset through apt so its dependencies are resolved. `uv` is installed via the Astral installer script. opencode is installed globally via npm (`@opencode/cli`); if the default npm prefix points outside `$HOME`, setup switches to a user-owned `~/.npm-global` so the install does not need sudo. Herdr is installed via `https://herdr.dev/install.sh`.
 
@@ -51,13 +51,13 @@ hl.config({
 Omarchy packages:
 
 ```text
-zsh tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty nodejs npm base-devel cmake ninja gettext unzip
+zsh tmux git fzf ripgrep btop zoxide starship yazi tokei uv python-pipx github-cli ghostty nodejs npm base-devel cmake ninja gettext unzip nspr nss
 ```
 
 Raspberry Pi OS packages (apt, plus curl-installed `uv` and apt-installed upstream Yazi `.deb`):
 
 ```text
-zsh tmux git fzf ripgrep btop net-tools pipx curl wget unzip ninja-build gettext cmake build-essential python3-venv fd-find starship zoxide tokei gh nodejs
+zsh tmux git fzf ripgrep btop net-tools pipx curl wget unzip ninja-build gettext cmake build-essential python3-venv fd-find starship zoxide tokei libnspr4 libnss3 gh nodejs
 ```
 
 Preview without changing the system:
@@ -103,6 +103,32 @@ Install the optional Ubuntu i3 desktop stack:
 ```bash
 ~/dotfiles/setup_scripts/setup.sh --platform ubuntu --desktop i3
 ```
+
+## Browser Control
+
+Browser automation drives the WSL-local Playwright Chromium at `~/.cache/ms-playwright/`, never a personal Windows browser. Setup clones `anomalyco/browser-control` to `~/repos/browser-control`, builds it, and exposes `browser-control` via `bun link` (`~/.bun/bin`, on `PATH` through `shell_config`).
+
+Prerequisite: one Playwright Chromium build under `~/.cache/ms-playwright/` (any Python with the `playwright` package provides it; system libs for it come from setup):
+
+```bash
+python -m playwright install chromium
+```
+
+Start the automation browser with the extension pre-loaded (no clicks):
+
+```bash
+~/scripts/browser-control-chromium.sh
+```
+
+Then verify with `browser-control doctor` (extension shows connected).
+
+Keep it up to date (no sudo needed):
+
+```bash
+git -C ~/repos/browser-control pull --ff-only && (cd ~/repos/browser-control && pnpm install && pnpm build)
+```
+
+Then restart the automation browser (`pkill -f wsl-chromium` and rerun the script above) so the new extension build loads.
 
 ## Config Installer
 

@@ -38,6 +38,11 @@ if [[ ":$PATH:" != *":$HOME/.npm-global/bin/:"* ]]; then
     export PATH="$PATH:$HOME/.npm-global/bin/"
 fi
 
+# Check if $HOME/.bun/bin/ is not already in the PATH (bun-linked tools like browser-control)
+if [[ ":$PATH:" != *":$HOME/.bun/bin/:"* ]]; then
+    export PATH="$PATH:$HOME/.bun/bin/"
+fi
+
 if [[ -n ${ZSH_VERSION:-} ]]; then
     if command -v uv &> /dev/null; then
         eval "$(uv generate-shell-completion zsh)"

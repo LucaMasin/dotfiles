@@ -29,6 +29,8 @@ UBUNTU_PACKAGES=(
   cmake
   build-essential
   python3-venv
+  libnspr4
+  libnss3
 )
 
 UBUNTU_I3_PACKAGES=(
@@ -61,6 +63,8 @@ OMARCHY_PACKAGES=(
   ninja
   gettext
   unzip
+  nspr
+  nss
 )
 
 RASPBERRYPI_PACKAGES=(
@@ -84,6 +88,8 @@ RASPBERRYPI_PACKAGES=(
   starship
   zoxide
   tokei
+  libnspr4
+  libnss3
 )
 
 usage() {
@@ -412,10 +418,10 @@ install_browser_control() {
     if command -v gh >/dev/null 2>&1; then
       run_shell 'clone browser-control repo' "gh repo clone anomalyco/browser-control '$repo_dir'"
     else
-      run_shell 'clone browser-control repo' "git clone git@github.com:anomalyco/browser-control.git '$repo_dir'"
+      run_shell 'clone browser-control repo' "git clone https://github.com/anomalyco/browser-control.git '$repo_dir'"
     fi
   else
-    printf 'browser-control repo already cloned at %s\n' "$repo_dir"
+    run_shell 'update browser-control repo' "git -C '$repo_dir' pull --ff-only"
   fi
 
   run_shell 'install browser-control dependencies' "(cd '$repo_dir' && pnpm install)"
