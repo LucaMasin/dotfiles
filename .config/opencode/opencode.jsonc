@@ -20,6 +20,23 @@
         }
       ]
     },
+    "poteto": {
+      "description": "Poteto engineering style: rigorous pstack workflow via poteto-mode skill",
+      "model": "openai/gpt-5.6-sol",
+      "request": {
+        "body": {
+          "reasoningEffort": "medium"
+        }
+      },
+      "permissions": [
+        {
+          "action": "subagent",
+          "resource": "implement",
+          "effect": "allow"
+        }
+      ],
+      "system": "You are operating as poteto-mode's full agent style. Read the poteto-mode skill's SKILL.md in full before doing any work, including its inline Principles index. Navigate to a leaf principle-* skill whenever you apply that principle. Pstack model settings live in ~/.agents/pstack-models.md when present; if a model name does not resolve, use the closest equivalent. Delegate via task subagents and ask via the question tool."
+    },
     "plan": {
       "model": "openai/gpt-5.6-sol",
       "request": {
