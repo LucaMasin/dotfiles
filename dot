@@ -1,0 +1,260 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_DIR="$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")"
+INSTALLER="$DOTFILES_DIR/scripts/dotfiles.sh"
+LINK_PATH="$HOME/.local/bin/dot"
+
+die() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+usage() {
+  cat <<'EOF'
+Usage: dot <command> [options]
+
+Commands:
+  init          Install tools and configure the machine; install the dot command.
+  update        Pull the repo (fast-forward only), then apply configs.
+  apply         Apply local configs, without pulling or installing system packages.
+  list          List available configs and their enabled state.
+  doctor        Check default configs, tools, and command availability (read-only).
+  edit          Open the repo in $EDITOR (default: nvim).
+  link          Install ~/.local/bin/dot, without replacing another command.
+  unlink        Remove only this repo's ~/.local/bin/dot symlink.
+  completions   Print completions for zsh or bash.
+  help          Show help. Each command also accepts --help.
+
+Examples:
+  dot init --dry-run
+  dot init --platform ubuntu --desktop i3
+  dot update --dry-run
+  dot apply nvim tmux
+  dot apply all --dry-run
+  dot doctor
+
+Default configs: zsh nvim tmux herdr scripts agents opencode starship.
+Applying tmux also installs TPM and its plugins.
+Reference: docs/commands.md
+EOF
+}
+
+check_link_target() {
+  if [[ -e $LINK_PATH || -L $LINK_PATH ]]; then
+    [[ -L $LINK_PATH && $(readlink -f -- "$LINK_PATH") == "$DOTFILES_DIR/dot" ]] ||
+      die "$LINK_PATH belongs to another installation; move it manually first"
+  fi
+}
+
+link_command() {
+  local dry_run="$1"
+  check_link_target
+  if [[ -L $LINK_PATH ]]; then
+    printf 'dot already linked: %s\n' "$LINK_PATH"
+  elif [[ $dry_run == true ]]; then
+    printf 'dry-run: link %s -> %s/dot\n' "$LINK_PATH" "$DOTFILES_DIR"
+  else
+    mkdir -p -- "${LINK_PATH%/*}"
+    ln -s -- "$DOTFILES_DIR/dot" "$LINK_PATH"
+    printf 'Linked %s -> %s/dot\n' "$LINK_PATH" "$DOTFILES_DIR"
+  fi
+  printf 'Ensure %s/.local/bin is on PATH; restart your shell after setup.\n' "$HOME"
+}
+
+doctor() {
+  local issues=0 tool resolved
+  "$INSTALLER" check || issues=$((issues + 1))
+  for tool in git zsh nvim tmux herdr node npm gh fzf rg btop zoxide starship yazi tokei uv opencode browser-control; do
+    if resolved="$(command -v "$tool")"; then
+      printf 'ok: %s (%s)\n' "$tool" "$resolved"
+    else
+      printf 'error: %s is missing from PATH. Repair: dot init\n' "$tool"
+      issues=$((issues + 1))
+    fi
+  done
+  if resolved="$(command -v dot)" && [[ -f $resolved && $(readlink -f -- "$resolved") == "$DOTFILES_DIR/dot" ]]; then
+    printf 'ok: dot resolves to this repo\n'
+  else
+    printf 'error: dot is missing or resolves elsewhere. Check PATH and run ./dot link\n'
+    issues=$((issues + 1))
+  fi
+  if [[ -x $HOME/.config/tmux/plugins/tpm/bin/install_plugins ]]; then
+    printf 'ok: TPM is installed\n'
+  else
+    printf 'error: TPM is missing. Repair: dot apply tmux\n'
+    issues=$((issues + 1))
+  fi
+  ((issues == 0))
+}
+
+completions() {
+  case "$1" in
+    bash)
+      cat <<'EOF'
+_dot_complete() {
+  local current="${COMP_WORDS[COMP_CWORD]}" command="${COMP_WORDS[1]:-}" words
+  if ((COMP_CWORD == 1)); then
+    words='init update apply list doctor edit link unlink completions help'
+  elif [[ ${COMP_WORDS[COMP_CWORD-1]} == --platform ]]; then
+    words='ubuntu omarchy raspberrypi'
+  elif [[ ${COMP_WORDS[COMP_CWORD-1]} == --desktop ]]; then
+    words='i3'
+  else
+    case "$command" in
+      apply) words="all $(dot list --names) --dry-run --force-disabled --help" ;;
+      update) words="all $(dot list --names) --dry-run --skip-pull --configs --help" ;;
+      init) words='--dry-run --platform --desktop --configs --skip-packages --help' ;;
+      link|unlink) words='--dry-run --help' ;;
+      completions) words='zsh bash --help' ;;
+      list) words='--names --help' ;;
+      *) words='--help' ;;
+    esac
+  fi
+  mapfile -t COMPREPLY < <(compgen -W "$words" -- "$current")
+}
+complete -F _dot_complete dot
+EOF
+      ;;
+    zsh)
+      cat <<'EOF'
+_dot_complete() {
+  local -a commands configs
+  commands=(init update apply list doctor edit link unlink completions help)
+  if ((CURRENT == 2)); then
+    compadd -- $commands
+  elif [[ ${words[CURRENT-1]} == --platform ]]; then
+    compadd -- ubuntu omarchy raspberrypi
+  elif [[ ${words[CURRENT-1]} == --desktop ]]; then
+    compadd -- i3
+  else
+    case $words[2] in
+      apply|update)
+        configs=("${(@f)$(dot list --names)}")
+        compadd -- all $configs --dry-run --help
+        [[ $words[2] != apply ]] || compadd -- --force-disabled
+        [[ $words[2] != update ]] || compadd -- --skip-pull --configs
+        ;;
+      init) compadd -- --dry-run --platform --desktop --configs --skip-packages --help ;;
+      link|unlink) compadd -- --dry-run --help ;;
+      completions) compadd -- zsh bash --help ;;
+      list) compadd -- --names --help ;;
+      *) compadd -- --help ;;
+    esac
+  fi
+}
+compdef _dot_complete dot
+EOF
+      ;;
+    *) die 'completions requires zsh or bash' ;;
+  esac
+}
+
+main() {
+  local command="${1:-help}" dry_run=false skip_pull=false arg raw
+  local args=() configs=() selected=false
+  (($# == 0)) || shift
+  for arg in "$@"; do
+    if [[ $arg == --help || $arg == -h ]]; then
+      case "$command" in
+        init) "$DOTFILES_DIR/setup_scripts/setup.sh" --help ;;
+        apply|update) printf 'Usage: dot %s [config...|all] [--dry-run]%s\n' "$command" "$(if [[ $command == apply ]]; then printf ' [--force-disabled]'; else printf ' [--skip-pull] [--configs comma-list]'; fi)" ;;
+        *) usage ;;
+      esac
+      return 0
+    fi
+  done
+  case "$command" in
+    help|-h|--help)
+      (($# == 0)) || die 'help does not accept arguments'
+      usage
+      ;;
+    init)
+      check_link_target
+      for arg in "$@"; do
+        [[ $arg != --dry-run ]] || dry_run=true
+      done
+      "$DOTFILES_DIR/setup_scripts/setup.sh" "$@"
+      link_command "$dry_run"
+      ;;
+    apply|update)
+      while (($#)); do
+        case "$1" in
+          --dry-run) dry_run=true; args+=(--dry-run) ;;
+          --force-disabled)
+            [[ $command == apply ]] || die '--force-disabled is only supported by apply'
+            args+=(--force-disabled)
+            ;;
+          --skip-pull)
+            [[ $command == update ]] || die '--skip-pull is only supported by update'
+            skip_pull=true
+            ;;
+          --configs)
+            [[ $command == update ]] || die 'use positional config names with apply'
+            [[ $selected == false && ${#configs[@]} == 0 ]] || die '--configs cannot be repeated or combined with positional config names'
+            (($# > 1)) || die '--configs requires a value'
+            raw="$2"
+            [[ -n $raw && $raw != ,* && $raw != *, && $raw != *,,* ]] || die 'invalid --configs list'
+            IFS=',' read -r -a configs <<<"$raw"
+            selected=true
+            shift
+            ;;
+          -*) die "unknown option: $1" ;;
+          *)
+            [[ $selected == false ]] || die '--configs cannot be combined with positional config names'
+            configs+=("$1")
+            ;;
+        esac
+        shift
+      done
+      "$INSTALLER" "${args[@]}" validate "${configs[@]}"
+      if [[ $command == update && $skip_pull == false ]]; then
+        if [[ $dry_run == true ]]; then
+          printf 'dry-run: git -C %q pull --ff-only\n' "$DOTFILES_DIR"
+          printf 'dry-run: config preview uses the current checkout, not incoming changes\n'
+        else
+          git -C "$DOTFILES_DIR" pull --ff-only
+        fi
+      fi
+      "$INSTALLER" "${args[@]}" install "${configs[@]}"
+      ;;
+    list)
+      exec "$INSTALLER" list "$@"
+      ;;
+    doctor)
+      (($# == 0)) || die 'doctor does not accept arguments'
+      doctor
+      ;;
+    edit)
+      (($# == 0)) || die 'edit does not accept arguments'
+      read -r -a args <<<"${EDITOR:-nvim}"
+      exec "${args[@]}" "$DOTFILES_DIR"
+      ;;
+    link|unlink)
+      if (($#)); then
+        [[ $# == 1 && $1 == --dry-run ]] || die "$command only accepts --dry-run"
+        dry_run=true
+      fi
+      if [[ $command == link ]]; then
+        link_command "$dry_run"
+      else
+        check_link_target
+        if [[ ! -L $LINK_PATH ]]; then
+          printf 'dot is not linked: %s\n' "$LINK_PATH"
+        elif [[ $dry_run == true ]]; then
+          printf 'dry-run: remove %s\n' "$LINK_PATH"
+        else
+          rm -- "$LINK_PATH"
+          printf 'Removed %s; configs are unchanged\n' "$LINK_PATH"
+        fi
+      fi
+      ;;
+    completions)
+      [[ $# == 1 ]] || die 'completions requires zsh or bash'
+      completions "$1"
+      ;;
+    *) die "unknown command: $command. Run dot help" ;;
+  esac
+}
+
+main "$@"

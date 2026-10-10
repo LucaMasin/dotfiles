@@ -44,6 +44,9 @@ if [[ ":$PATH:" != *":$HOME/.bun/bin/:"* ]]; then
 fi
 
 if [[ -n ${ZSH_VERSION:-} ]]; then
+    if [[ -x "$HOME/.local/bin/dot" ]]; then
+        eval "$("$HOME/.local/bin/dot" completions zsh)"
+    fi
     if command -v uv &> /dev/null; then
         eval "$(uv generate-shell-completion zsh)"
     fi
@@ -58,6 +61,9 @@ if [[ -n ${ZSH_VERSION:-} ]]; then
 fi
 
 if [[ -n ${BASH_VERSION:-} ]]; then
+    if [[ -x "$HOME/.local/bin/dot" ]]; then
+        eval "$("$HOME/.local/bin/dot" completions bash)"
+    fi
     if command -v herdr &> /dev/null; then
         eval "$(herdr completion bash)"
     fi

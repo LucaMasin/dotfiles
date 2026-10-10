@@ -3,6 +3,10 @@ set -euo pipefail
 
 REPO_URL="https://github.com/LucaMasin/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
+DRY_RUN=false
+PLATFORM=""
+DESKTOP="none"
+SETUP_ARGS=()
 
 die() {
   printf 'error: %s\n' "$*" >&2
@@ -75,7 +79,50 @@ install_git() {
 main() {
   local platform
 
-  platform="$(detect_platform)" || die 'could not detect platform; bootstrap supports ubuntu, omarchy, and raspberrypi'
+  while (($#)); do
+    case "$1" in
+      --dry-run) DRY_RUN=true; SETUP_ARGS+=(--dry-run) ;;
+      --platform|--desktop|--configs)
+        (($# > 1)) || die "$1 requires a value"
+        [[ -n $2 && $2 != -* ]] || die "$1 requires a value"
+        case "$1" in
+          --platform) PLATFORM="$2" ;;
+          --desktop) DESKTOP="$2" ;;
+          --configs)
+            [[ $2 != ,* && $2 != *, && $2 != *,,* ]] || die 'invalid --configs list'
+            ;;
+        esac
+        SETUP_ARGS+=("$1" "$2")
+        shift
+        ;;
+      --skip-packages) SETUP_ARGS+=("$1") ;;
+      -h|--help)
+        printf 'Usage: auto_install.sh [--dry-run] [--platform ubuntu|omarchy|raspberrypi] [--desktop i3] [--configs comma-list|all] [--skip-packages]\n'
+        return 0
+        ;;
+      *) die "unknown bootstrap option: $1" ;;
+    esac
+    shift
+  done
+  platform="$PLATFORM"
+  [[ -n $platform ]] || platform="$(detect_platform)" || die 'could not detect platform; bootstrap supports ubuntu, omarchy, and raspberrypi'
+  case "$platform" in
+    ubuntu|omarchy|raspberrypi) ;;
+    *) die "unsupported platform: $platform" ;;
+  esac
+  case "$DESKTOP" in
+    none|i3) ;;
+    *) die "unsupported desktop: $DESKTOP" ;;
+  esac
+  [[ $DESKTOP != i3 || $platform == ubuntu ]] || die '--desktop i3 is only supported on Ubuntu'
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: install git if missing using %s\n' "$platform"
+    printf 'dry-run: clone or fast-forward %s into %s\n' "$REPO_URL" "$DOTFILES_DIR"
+    printf 'dry-run: %q init' "$DOTFILES_DIR/dot"
+    printf ' %q' "${SETUP_ARGS[@]}"
+    printf '\n'
+    return 0
+  fi
   install_git "$platform"
 
   if [[ -d $DOTFILES_DIR/.git ]]; then
@@ -89,7 +136,7 @@ main() {
   fi
 
   printf 'Starting setup for %s\n' "$platform"
-  "$DOTFILES_DIR/setup_scripts/setup.sh"
+  "$DOTFILES_DIR/dot" init "${SETUP_ARGS[@]}"
 }
 
 main "$@"

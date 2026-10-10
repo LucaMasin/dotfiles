@@ -7,7 +7,7 @@ PLATFORM=""
 DRY_RUN=false
 SKIP_PACKAGES=false
 DESKTOP="none"
-CONFIGS=(zsh nvim tmux herdr scripts agents opencode starship)
+CONFIGS=()
 NODE_MAJOR=24
 NEOVIM_REPOSITORY="https://github.com/neovim/neovim.git"
 
@@ -179,6 +179,7 @@ is_supported_raspberrypi() {
 parse_configs() {
   local raw="$1"
 
+  [[ -n $raw && $raw != ,* && $raw != *, && $raw != *,,* ]] || die '--configs requires nonempty comma-separated config names'
   if [[ $raw == all ]]; then
     CONFIGS=(all)
     return 0
@@ -373,14 +374,20 @@ install_opencode() {
     return 0
   fi
 
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: configure a user-owned npm prefix if the current prefix is outside $HOME\n'
+    run_shell 'install opencode with npm' 'npm install -g @opencode/cli'
+    return 0
+  fi
+
   # Switch to a user-owned npm prefix when the default points outside
   # $HOME (e.g. /usr on apt-installed Node), so the global install
   # does not require sudo.
   local prefix
   prefix="$(npm config get prefix 2>/dev/null || true)"
   if [[ -n "$prefix" && "$prefix" != "$HOME"/* ]]; then
-    mkdir -p "$HOME/.npm-global"
-    npm config set prefix "$HOME/.npm-global"
+    run mkdir -p "$HOME/.npm-global"
+    run npm config set prefix "$HOME/.npm-global"
     printf 'configured npm prefix to %s (previous %s was outside $HOME)\n' "$HOME/.npm-global" "$prefix"
   fi
 
@@ -396,12 +403,16 @@ install_browser_control() {
   printf 'Installing browser-control\n'
 
   if ! command -v pnpm >/dev/null 2>&1; then
-    local prefix
-    prefix="$(npm config get prefix 2>/dev/null || true)"
-    if [[ -z "$prefix" ]]; then
-      prefix="$HOME/.npm-global"
+    if [[ $DRY_RUN == true ]]; then
+      printf 'dry-run: enable pnpm via corepack in the npm prefix\n'
+    else
+      local prefix
+      prefix="$(npm config get prefix 2>/dev/null || true)"
+      if [[ -z "$prefix" ]]; then
+        prefix="$HOME/.npm-global"
+      fi
+      run_shell 'enable pnpm via corepack' "corepack enable --install-directory \"$prefix/bin\" pnpm"
     fi
-    run_shell 'enable pnpm via corepack' "corepack enable --install-directory \"$prefix/bin\" pnpm"
   else
     printf 'pnpm already installed\n'
   fi
@@ -413,7 +424,7 @@ install_browser_control() {
   fi
 
   local repo_dir="$HOME/repos/browser-control"
-  mkdir -p -- "$HOME/repos"
+  run mkdir -p -- "$HOME/repos"
   if [[ ! -d $repo_dir/.git ]]; then
     if command -v gh >/dev/null 2>&1; then
       run_shell 'clone browser-control repo' "gh repo clone anomalyco/browser-control '$repo_dir'"
@@ -648,11 +659,33 @@ apply_configs() {
 
   if [[ $DESKTOP == i3 ]]; then
     args+=(--force-disabled)
-    configs+=(i3 polybar alacritty rofi picom)
+    if ((${#configs[@]} == 0)) || [[ ${configs[0]} == all ]]; then
+      "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" install "${configs[@]}"
+      configs=(i3 polybar alacritty rofi picom)
+    else
+      configs+=(i3 polybar alacritty rofi picom)
+    fi
   fi
 
   printf 'Applying dotfiles config\n'
   "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" install "${configs[@]}"
+}
+
+validate_configs() {
+  local args=() configs=("${CONFIGS[@]}")
+  if [[ $DESKTOP == i3 ]]; then
+    args+=(--force-disabled)
+    if ((${#configs[@]} == 0)); then
+      "$DOTFILES_DIR/scripts/dotfiles.sh" validate
+      configs=(i3 polybar alacritty rofi picom)
+    elif [[ ${configs[0]} == all ]]; then
+      "$DOTFILES_DIR/scripts/dotfiles.sh" validate all
+      configs=(i3 polybar alacritty rofi picom)
+    else
+      configs+=(i3 polybar alacritty rofi picom)
+    fi
+  fi
+  "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" validate "${configs[@]}"
 }
 
 parse_args() {
@@ -694,10 +727,12 @@ parse_args() {
     none|i3) ;;
     *) die "unsupported desktop: $DESKTOP" ;;
   esac
+  [[ $DESKTOP != i3 || $PLATFORM == ubuntu ]] || die '--desktop i3 is only supported on Ubuntu'
 }
 
 main() {
   parse_args "$@"
+  validate_configs
 
   case "$PLATFORM" in
     ubuntu) install_ubuntu_packages ;;
