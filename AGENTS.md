@@ -4,11 +4,12 @@ Personal Linux dotfiles repo. There is no repo-wide build system, CI, or pre-com
 
 ## High-Value Files
 
-- `dot`: public CLI (`init`, `update`, `apply`, `list`, `doctor`, `edit`, `link`, `unlink`, `completions`). Resolves its owning checkout through the global symlink.
+- `dot`: public CLI (`init`, `update`, `upgrade`, `apply`, `list`, `doctor`, `edit`, `link`, `unlink`, `completions`). Resolves its owning checkout through the global symlink.
 - `README.md`: lean quick start. `docs/`: setup, commands, config behavior, troubleshooting, and the optional web service. `SETUP.md` is a documentation redirect.
 - `docs/brew-migration.md`: future opt-in migration plan. Brew is not implemented; preserve existing installers unless explicitly approved.
 - `auto_install.sh`: bootstrap entrypoint for `curl | bash`; installs git, clones/updates `~/dotfiles`, then runs `dot init`. Supports setup flags and a no-write dry-run.
 - `setup_scripts/setup.sh`: platform package install plus config application; supports `--platform ubuntu|omarchy|raspberrypi`, `--dry-run`, `--skip-packages`, `--desktop i3`, and `--configs <comma-list>|all`.
+- `setup_scripts/upgrade.sh`: backs `dot upgrade`; sources `setup.sh` (guarded `main`) and upgrades user-installed tools (npm AI CLIs, herdr, starship, zoxide, uv, tokei, browser-control); skips missing tools and ones resolving outside `$HOME`. Neovim (sudo source build) is opt-in via `--with neovim`. Preview with `--dry-run`.
 - `setup_scripts/update.sh`: delegates to `dot update`, which pulls with `git pull --ff-only` and applies configs without platform desktop changes or package upgrades.
 - `scripts/dotfiles.sh`: config-only installer driven by `dotfiles-manifest.conf`; owns default config selection and validates all selections before writing.
 - `tests/test_dot.py`: stdlib integration checks in temporary homes under `/tmp/opencode`, with mocked Git, sudo, npm, and Omarchy. No real package installation or home config changes.

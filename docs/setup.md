@@ -114,7 +114,7 @@ python -m playwright install chromium
 browser-control doctor
 ```
 
-Setup builds browser-control in `~/repos/browser-control` and exposes it through `bun link`. To update it:
+Setup builds browser-control in `~/repos/browser-control` and exposes it through `bun link`. `dot upgrade browser-control` updates it, or do it manually:
 
 ```bash
 git -C ~/repos/browser-control pull --ff-only

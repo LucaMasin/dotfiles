@@ -24,7 +24,7 @@ class DotTests(unittest.TestCase):
             directory.mkdir()
         for name in ("dot", "auto_install.sh", "dotfiles-manifest.conf", "shell_config"):
             shutil.copy2(ROOT / name, self.repo / name)
-        for name in ("scripts/dotfiles.sh", "setup_scripts/setup.sh", "setup_scripts/update.sh"):
+        for name in ("scripts/dotfiles.sh", "setup_scripts/setup.sh", "setup_scripts/update.sh", "setup_scripts/upgrade.sh"):
             target = self.repo / name
             target.parent.mkdir(exist_ok=True)
             shutil.copy2(ROOT / name, target)
@@ -250,6 +250,27 @@ class DotTests(unittest.TestCase):
         self.run_dot("nvim", "--skip-pull", executable=self.repo / "setup_scripts/update.sh")
         self.assertEqual(os.readlink(self.home / ".config/nvim"), str(self.repo / ".config/nvim"))
         self.assertFalse((self.home / "git-calls").exists())
+
+    def test_upgrade_defaults_skip_neovim_and_missing_tools(self):
+        output = self.run_dot("upgrade", "--dry-run")
+        self.assertIn("opencode: not installed, skipping", output)
+        self.assertNotIn("Neovim", output)
+        output = self.run_dot("upgrade", "--dry-run", "--with", "neovim")
+        self.assertIn("neovim: not installed, skipping", output)
+        self.assertIn("unknown tool", self.run_dot("upgrade", "bogus", success=False))
+
+    def test_upgrade_user_installed_tool_only(self):
+        local = self.home / ".local/bin"
+        local.mkdir(parents=True)
+        for name in ("opencode", "nvim"):
+            (local / name).write_text("#!/usr/bin/env bash\n")
+            (local / name).chmod(0o755)
+        self.env["PATH"] = f"{local}:{self.env['PATH']}"
+        output = self.run_dot("upgrade", "--dry-run")
+        self.assertIn("npm install -g @opencode/cli@latest", output)
+        self.assertNotIn("Neovim", output)
+        self.assertIn("Building the latest stable Neovim", self.run_dot("upgrade", "--dry-run", "neovim"))
+        self.assertFalse((self.home / "sudo-calls").exists())
 
     def test_link_symlink_resolution_and_unlink(self):
         self.run_dot("link")

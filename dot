@@ -17,6 +17,7 @@ Usage: dot <command> [options]
 Commands:
   init          Install tools and configure the machine; install the dot command.
   update        Pull the repo (fast-forward only), then apply configs.
+  upgrade       Upgrade apps installed outside the system package manager.
   apply         Apply local configs, without pulling or installing system packages.
   list          List available configs and their enabled state.
   doctor        Check default configs, tools, and command availability (read-only).
@@ -30,6 +31,8 @@ Examples:
   dot init --dry-run
   dot init --platform ubuntu --desktop i3
   dot update --dry-run
+  dot upgrade --dry-run
+  dot upgrade --with neovim
   dot apply nvim tmux
   dot apply all --dry-run
   dot doctor
@@ -95,7 +98,7 @@ completions() {
 _dot_complete() {
   local current="${COMP_WORDS[COMP_CWORD]}" command="${COMP_WORDS[1]:-}" words
   if ((COMP_CWORD == 1)); then
-    words='init update apply list doctor edit link unlink completions help'
+    words='init update upgrade apply list doctor edit link unlink completions help'
   elif [[ ${COMP_WORDS[COMP_CWORD-1]} == --platform ]]; then
     words='ubuntu omarchy raspberrypi'
   elif [[ ${COMP_WORDS[COMP_CWORD-1]} == --desktop ]]; then
@@ -104,6 +107,7 @@ _dot_complete() {
     case "$command" in
       apply) words="all $(dot list --names) --dry-run --force-disabled --help" ;;
       update) words="all $(dot list --names) --dry-run --skip-pull --configs --help" ;;
+      upgrade) words='opencode pi claude herdr starship zoxide uv tokei browser-control neovim --with --dry-run --help' ;;
       init) words='--dry-run --platform --desktop --configs --skip-packages --help' ;;
       link|unlink) words='--dry-run --help' ;;
       completions) words='zsh bash --help' ;;
@@ -120,7 +124,7 @@ EOF
       cat <<'EOF'
 _dot_complete() {
   local -a commands configs
-  commands=(init update apply list doctor edit link unlink completions help)
+  commands=(init update upgrade apply list doctor edit link unlink completions help)
   if ((CURRENT == 2)); then
     compadd -- $commands
   elif [[ ${words[CURRENT-1]} == --platform ]]; then
@@ -135,6 +139,7 @@ _dot_complete() {
         [[ $words[2] != apply ]] || compadd -- --force-disabled
         [[ $words[2] != update ]] || compadd -- --skip-pull --configs
         ;;
+      upgrade) compadd -- opencode pi claude herdr starship zoxide uv tokei browser-control neovim --with --dry-run --help ;;
       init) compadd -- --dry-run --platform --desktop --configs --skip-packages --help ;;
       link|unlink) compadd -- --dry-run --help ;;
       completions) compadd -- zsh bash --help ;;
@@ -158,6 +163,7 @@ main() {
     if [[ $arg == --help || $arg == -h ]]; then
       case "$command" in
         init) "$DOTFILES_DIR/setup_scripts/setup.sh" --help ;;
+        upgrade) "$DOTFILES_DIR/setup_scripts/upgrade.sh" --help ;;
         apply|update) printf 'Usage: dot %s [config...|all] [--dry-run]%s\n' "$command" "$(if [[ $command == apply ]]; then printf ' [--force-disabled]'; else printf ' [--skip-pull] [--configs comma-list]'; fi)" ;;
         *) usage ;;
       esac
@@ -176,6 +182,9 @@ main() {
       done
       "$DOTFILES_DIR/setup_scripts/setup.sh" "$@"
       link_command "$dry_run"
+      ;;
+    upgrade)
+      exec "$DOTFILES_DIR/setup_scripts/upgrade.sh" "$@"
       ;;
     apply|update)
       while (($#)); do

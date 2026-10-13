@@ -34,6 +34,19 @@ No names selects the default configs. `all` selects every enabled config and can
 
 `apply` does not pull Git changes, install system packages, or change platform desktop settings. Selecting tmux installs TPM and its plugins, which can require network access. Applying configs does not reload running applications.
 
+## Upgrade
+
+```bash
+dot upgrade
+dot upgrade opencode herdr
+dot upgrade --with neovim
+dot upgrade --dry-run
+```
+
+Upgrade refreshes tools this repo installs outside the system package manager: `opencode`, `pi`, `claude` (npm `@latest`), `herdr`, `starship`, `zoxide`, `uv`, `tokei`, and `browser-control` (pull, install, build, link). Naming tools upgrades only those. Missing tools are skipped; `dot init` installs them. Tools resolving outside `$HOME` (apt, snap, pacman) are skipped and left to the system package manager.
+
+Neovim is opt-in because it is a source build that needs `sudo`. Use `--with neovim` or `dot upgrade neovim`. Running `dot update` never upgrades tools.
+
 ## Update
 
 ```bash

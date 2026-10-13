@@ -17,6 +17,7 @@ Setup detects Ubuntu, Omarchy, or Raspberry Pi OS automatically. Raspberry Pi su
 
 ```bash
 dot update                 # Pull latest configs and apply them
+dot upgrade                # Upgrade user-installed apps (--with neovim to rebuild it)
 dot apply                  # Apply local default configs
 dot apply nvim tmux         # Apply selected configs
 dot apply --dry-run         # Preview without changes
