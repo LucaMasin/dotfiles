@@ -58,6 +58,8 @@ OMARCHY_PACKAGES=(
   ghostty
   nodejs
   npm
+  pnpm
+  bun
   base-devel
   cmake
   ninja
@@ -403,6 +405,64 @@ install_npm_tool() {
   run npm install -g "$package" "$@"
 }
 
+ensure_pnpm() {
+  if command -v pnpm >/dev/null 2>&1; then
+    printf 'pnpm already installed\n'
+    return 0
+  fi
+
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: install pnpm (corepack when available, otherwise npm)\n'
+    return 0
+  fi
+
+  local prefix
+  if command -v corepack >/dev/null 2>&1; then
+    prefix="$(npm config get prefix 2>/dev/null || true)"
+    if [[ -z "$prefix" ]]; then
+      prefix="$HOME/.npm-global"
+    fi
+    if [[ "$prefix" != "$HOME"/* ]]; then
+      install_npm_tool pnpm pnpm
+    else
+      run_shell 'enable pnpm via corepack' "corepack enable --install-directory \"$prefix/bin\" pnpm"
+    fi
+  else
+    install_npm_tool pnpm pnpm
+  fi
+
+  prefix="$(npm config get prefix 2>/dev/null || true)"
+  prefix="${prefix:-$HOME/.npm-global}"
+  case ":$PATH:" in
+    *":$prefix/bin:"*) ;;
+    *) export PATH="$prefix/bin:$PATH" ;;
+  esac
+
+  hash -r 2>/dev/null || true
+  command -v pnpm >/dev/null 2>&1 || die 'pnpm installation failed; install pnpm manually then rerun dot init'
+}
+
+ensure_bun() {
+  if command -v bun >/dev/null 2>&1; then
+    printf 'bun already installed\n'
+    return 0
+  fi
+
+  if [[ $DRY_RUN == true ]]; then
+    printf 'dry-run: install bun\n'
+    return 0
+  fi
+
+  run_shell 'install bun' 'curl -fsSL https://bun.sh/install | bash'
+  case ":$PATH:" in
+    *":$HOME/.bun/bin:"*) ;;
+    *) export PATH="$HOME/.bun/bin:$PATH" ;;
+  esac
+
+  hash -r 2>/dev/null || true
+  command -v bun >/dev/null 2>&1 || die 'bun installation failed; install bun manually then rerun dot init'
+}
+
 install_browser_control() {
   if command -v browser-control >/dev/null 2>&1; then
     printf 'browser-control already installed\n'
@@ -411,26 +471,8 @@ install_browser_control() {
 
   printf 'Installing browser-control\n'
 
-  if ! command -v pnpm >/dev/null 2>&1; then
-    if [[ $DRY_RUN == true ]]; then
-      printf 'dry-run: enable pnpm via corepack in the npm prefix\n'
-    else
-      local prefix
-      prefix="$(npm config get prefix 2>/dev/null || true)"
-      if [[ -z "$prefix" ]]; then
-        prefix="$HOME/.npm-global"
-      fi
-      run_shell 'enable pnpm via corepack' "corepack enable --install-directory \"$prefix/bin\" pnpm"
-    fi
-  else
-    printf 'pnpm already installed\n'
-  fi
-
-  if ! command -v bun >/dev/null 2>&1; then
-    run_shell 'install bun' 'curl -fsSL https://bun.sh/install | bash'
-  else
-    printf 'bun already installed\n'
-  fi
+  ensure_pnpm
+  ensure_bun
 
   local repo_dir="$HOME/repos/browser-control"
   run mkdir -p -- "$HOME/repos"
@@ -447,6 +489,18 @@ install_browser_control() {
   run_shell 'install browser-control dependencies' "(cd '$repo_dir' && pnpm install)"
   run_shell 'build browser-control' "(cd '$repo_dir' && pnpm build)"
   run_shell 'link browser-control globally' "(cd '$repo_dir' && bun link)"
+  hash -r 2>/dev/null || true
+
+  if [[ $DRY_RUN == false ]] && ! command -v browser-control >/dev/null 2>&1; then
+    case ":$PATH:" in
+      *":$HOME/.bun/bin:"*) ;;
+      *) export PATH="$HOME/.bun/bin:$PATH" ;;
+    esac
+    hash -r 2>/dev/null || true
+  fi
+  if [[ $DRY_RUN == false ]] && ! command -v browser-control >/dev/null 2>&1; then
+    die 'browser-control build finished but the command is not on PATH; ensure ~/.bun/bin is on PATH then rerun dot init'
+  fi
 
   printf 'Load the unpacked extension from %s/extension/dist in your Chromium-family browser, then run `browser-control execute` to start the relay.\n' "$repo_dir"
 }

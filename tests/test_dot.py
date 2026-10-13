@@ -252,6 +252,9 @@ class DotTests(unittest.TestCase):
         self.assertFalse((self.home / "git-calls").exists())
 
     def test_upgrade_defaults_skip_neovim_and_missing_tools(self):
+        for name in ("bash", "dirname", "readlink"):
+            (self.bin / name).symlink_to(shutil.which(name))
+        self.env["PATH"] = str(self.bin)
         output = self.run_dot("upgrade", "--dry-run")
         self.assertIn("opencode: not installed, skipping", output)
         self.assertNotIn("Neovim", output)
@@ -271,6 +274,32 @@ class DotTests(unittest.TestCase):
         self.assertNotIn("Neovim", output)
         self.assertIn("Building the latest stable Neovim", self.run_dot("upgrade", "--dry-run", "neovim"))
         self.assertFalse((self.home / "sudo-calls").exists())
+
+    def test_browser_control_upgrade_finds_pnpm_in_custom_npm_prefix(self):
+        for name in ("bash", "dirname", "readlink", "mkdir"):
+            (self.bin / name).symlink_to(shutil.which(name))
+        self.env["PATH"] = str(self.bin)
+        (self.home / "repos/browser-control/.git").mkdir(parents=True)
+        tools = self.home / "tools"
+        tools.mkdir()
+        shutil.move(self.mock("browser-control", "exit 0"), tools / "browser-control")
+        self.env["PATH"] = f"{tools}:{self.env['PATH']}"
+        self.mock("bun", "exit 0")
+        self.mock("npm", '''
+if [[ "$*" == "config get prefix" ]]; then
+  printf '%s/.local\\n' "$HOME"
+elif [[ "$*" == "install -g pnpm" ]]; then
+  mkdir -p "$HOME/.local/bin"
+  printf '#!/usr/bin/env bash\\nprintf "pnpm %%s\\\\n" "$*" >> "$HOME/build-calls"\\n' > "$HOME/.local/bin/pnpm"
+  chmod +x "$HOME/.local/bin/pnpm"
+else
+  exit 1
+fi''')
+        (self.bin / "chmod").symlink_to(shutil.which("chmod"))
+        self.run_dot("upgrade", "browser-control")
+        self.assertEqual((self.home / "build-calls").read_text().splitlines(), [
+            "pnpm install", "pnpm build",
+        ])
 
     def test_link_symlink_resolution_and_unlink(self):
         self.run_dot("link")

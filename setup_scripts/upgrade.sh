@@ -47,10 +47,13 @@ upgrade_browser_control() {
     printf 'browser-control: repo not found in %s, skipping\n' "$repo_dir"
     return 0
   fi
+  ensure_pnpm
+  ensure_bun
   run_shell 'update browser-control repo' "git -C '$repo_dir' pull --ff-only"
   run_shell 'install browser-control dependencies' "(cd '$repo_dir' && pnpm install)"
   run_shell 'build browser-control' "(cd '$repo_dir' && pnpm build)"
   run_shell 'link browser-control globally' "(cd '$repo_dir' && bun link)"
+  hash -r 2>/dev/null || true
 }
 
 upgrade_tool() {

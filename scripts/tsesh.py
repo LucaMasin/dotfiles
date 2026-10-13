@@ -30,21 +30,33 @@ def get_subfolders(folders: list[str]) -> list[str]:
 
 
 def run_tmux_session(folder: str):
+    folder = os.path.abspath(os.path.expanduser(folder))
     folder_name = Path(folder).name
     tmux_session_name = folder_name.replace(" ", "_").replace("-", "_")
-    session_exists = subprocess.run(
-        ["tmux", "has-session", "-t", tmux_session_name], capture_output=True, text=True
-    )
-    if session_exists.returncode == 0:
-        switch_client = subprocess.run(
-            ["tmux", "switch-client", "-t", tmux_session_name],
+    session_exists = (
+        subprocess.run(
+            ["tmux", "has-session", "-t", tmux_session_name],
             capture_output=True,
             text=True,
-        )
-        if switch_client.returncode != 0:
-            subprocess.run(["tmux", "attach-session", "-t", tmux_session_name])
+        ).returncode
+        == 0
+    )
+    if os.environ.get("TMUX"):
+        # Inside tmux: switch the current client. Outside clients are
+        # untouched; create detached first so switch always has a target.
+        if not session_exists:
+            subprocess.run(
+                ["tmux", "new-session", "-d", "-s", tmux_session_name, "-c", folder]
+            )
+        subprocess.run(["tmux", "switch-client", "-t", tmux_session_name])
     else:
-        subprocess.run(["tmux", "new-session", "-s", tmux_session_name, "-c", folder])
+        # Outside tmux: switch-client would silently act on the most
+        # recently active client (rc 0) and never attach this terminal,
+        # so attach (or create attached) instead.
+        if session_exists:
+            subprocess.run(["tmux", "attach-session", "-t", tmux_session_name])
+        else:
+            subprocess.run(["tmux", "new-session", "-s", tmux_session_name, "-c", folder])
 
 
 def _herdr_label(folder: str) -> str:
