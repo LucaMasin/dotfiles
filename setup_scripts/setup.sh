@@ -340,7 +340,7 @@ install_user_tools() {
     run pipx install poetry
   fi
 
-  install_opencode
+  install_ai_tools
   install_browser_control
   install_herdr
 }
@@ -368,15 +368,24 @@ install_cargo_tool() {
     "source \"$HOME/.cargo/env\" 2>/dev/null || true; cargo install --locked $*"
 }
 
-install_opencode() {
-  if command -v opencode >/dev/null 2>&1; then
-    printf 'opencode already installed\n'
+install_ai_tools() {
+  install_npm_tool opencode @opencode/cli
+  install_npm_tool pi @earendil-works/pi-coding-agent --ignore-scripts
+  install_npm_tool claude @anthropic-ai/claude-code
+}
+
+install_npm_tool() {
+  local command_name="$1" package="$2"
+  shift 2
+
+  if command -v "$command_name" >/dev/null 2>&1; then
+    printf '%s already installed\n' "$command_name"
     return 0
   fi
 
   if [[ $DRY_RUN == true ]]; then
     printf 'dry-run: configure a user-owned npm prefix if the current prefix is outside $HOME\n'
-    run_shell 'install opencode with npm' 'npm install -g @opencode/cli'
+    run npm install -g "$package" "$@"
     return 0
   fi
 
@@ -391,7 +400,7 @@ install_opencode() {
     printf 'configured npm prefix to %s (previous %s was outside $HOME)\n' "$HOME/.npm-global" "$prefix"
   fi
 
-  run_shell 'install opencode with npm' 'npm install -g @opencode/cli'
+  run npm install -g "$package" "$@"
 }
 
 install_browser_control() {
@@ -459,7 +468,7 @@ install_omarchy_packages() {
   printf 'Installing Omarchy packages\n'
   run omarchy pkg add "${OMARCHY_PACKAGES[@]}"
   install_neovim_from_source
-  install_opencode
+  install_ai_tools
   install_browser_control
   install_herdr
 }
@@ -494,7 +503,7 @@ install_pi_user_tools() {
     run pipx install poetry
   fi
 
-  install_opencode
+  install_ai_tools
   install_browser_control
   install_herdr
 }

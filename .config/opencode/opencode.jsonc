@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugins": ["@openchamber/opencode-claude@1.4.1"],
   "model": "opencode-go/muse-spark-1.3-contributor",
   "agents": {
     "general": {

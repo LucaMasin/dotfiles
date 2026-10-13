@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 import shutil
@@ -188,6 +189,9 @@ class DotTests(unittest.TestCase):
             with self.subTest(platform=platform):
                 output = self.run_dot("init", "--platform", platform, "--dry-run")
                 self.assertIn("configure a user-owned npm prefix", output)
+                self.assertIn("npm install -g @opencode/cli", output)
+                self.assertIn("npm install -g @earendil-works/pi-coding-agent --ignore-scripts", output)
+                self.assertIn("npm install -g @anthropic-ai/claude-code", output)
                 self.assertIn("Linking nvim", output)
                 self.assertIn("dry-run: link", output)
                 self.assertEqual(self.snapshot(self.home), before)
@@ -274,7 +278,7 @@ class DotTests(unittest.TestCase):
         tpm.write_text("#!/bin/bash\nexit 0\n")
         tpm.chmod(0o755)
         for tool in ("zsh", "nvim", "tmux", "herdr", "node", "gh", "fzf", "rg", "btop",
-                     "zoxide", "starship", "yazi", "tokei", "uv", "opencode", "browser-control"):
+                     "zoxide", "starship", "yazi", "tokei", "uv", "opencode", "pi", "claude", "browser-control"):
             self.mock(tool, "exit 0")
         self.run_dot("apply")
         self.run_dot("link")
@@ -337,6 +341,56 @@ class DotTests(unittest.TestCase):
         self.mock("npm", 'printf "invoked\\n" > "$HOME/npm-query"; printf "/usr\\n"')
         self.run_dot("init", "--platform", "ubuntu", "--dry-run")
         self.assertEqual(self.snapshot(self.home), {})
+
+    def test_ai_tools_install_on_all_platforms_with_user_owned_prefix(self):
+        for tool in ("starship", "zoxide", "uv", "yazi", "cargo", "tokei", "poetry",
+                     "browser-control", "herdr", "make", "cmake", "curl", "wget", "gpg"):
+            self.mock(tool, "exit 0")
+        self.mock("sudo", 'if [[ "$1" == tee ]]; then cat >/dev/null; fi')
+        self.mock("omarchy", "exit 0")
+        self.mock("git", 'if [[ "$1" == ls-remote ]]; then printf "abc\\trefs/tags/v0.11.0\\n"; fi')
+        self.mock("npm", '''
+if [[ "$*" == "config get prefix" ]]; then
+  if [[ -f "$HOME/npm-prefix" ]]; then cat "$HOME/npm-prefix"; else printf "/usr\\n"; fi
+else
+  printf "%s\\n" "$*" >> "$HOME/npm-calls"
+  if [[ "$1" == config && "$2" == set ]]; then printf "%s\\n" "$4" > "$HOME/npm-prefix"; fi
+fi''')
+        for platform in ("ubuntu", "omarchy", "raspberrypi"):
+            with self.subTest(platform=platform):
+                for name in ("npm-calls", "npm-prefix"):
+                    (self.home / name).unlink(missing_ok=True)
+                self.run_dot("init", "--platform", platform, "--configs", "nvim")
+                self.assertEqual((self.home / "npm-calls").read_text().splitlines(), [
+                    f"config set prefix {self.home}/.npm-global",
+                    "install -g @opencode/cli",
+                    "install -g @earendil-works/pi-coding-agent --ignore-scripts",
+                    "install -g @anthropic-ai/claude-code",
+                ])
+
+    def test_existing_ai_tools_are_not_reinstalled(self):
+        for tool in ("opencode", "pi", "claude"):
+            self.mock(tool, "exit 0")
+        output = self.run_dot("init", "--platform", "ubuntu", "--dry-run")
+        for tool in ("opencode", "pi", "claude"):
+            self.assertIn(f"{tool} already installed", output)
+        self.assertNotIn("npm install -g", output)
+
+    def test_skip_packages_skips_ai_tool_installation(self):
+        output = self.run_dot("init", "--platform", "ubuntu", "--skip-packages", "--dry-run")
+        self.assertNotIn("npm install", output)
+        self.assertFalse((self.home / ".npmrc").exists())
+
+    def test_opencode_config_ships_claude_plugin(self):
+        config = json.loads((ROOT / ".config/opencode/opencode.jsonc").read_text())
+        self.assertEqual(config["plugins"], ["@openchamber/opencode-claude@1.4.1"])
+        target = self.repo / ".config/opencode/opencode.jsonc"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / ".config/opencode/opencode.jsonc", target)
+        self.run_dot("apply", "opencode")
+        installed = self.home / ".config/opencode/opencode.jsonc"
+        self.assertEqual(json.loads(installed.read_text())["plugins"],
+                         ["@openchamber/opencode-claude@1.4.1"])
 
 
 if __name__ == "__main__":

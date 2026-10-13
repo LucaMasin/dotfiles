@@ -44,7 +44,7 @@ dot apply nvim tmux
 
 Setup uses apt, the GitHub CLI and NodeSource repositories, Snap for Yazi, and user installers. Node.js 24 includes npm. Neovim is built from the latest stable release in `~/repos/neovim`.
 
-The apt package list is in `setup_scripts/setup.sh`. It includes `libnspr4` and `libnss3` for Playwright Chromium. OpenCode uses npm, Herdr uses its official installer, and browser-control is built from source.
+The apt package list is in `setup_scripts/setup.sh`. It includes `libnspr4` and `libnss3` for Playwright Chromium. OpenCode, Pi, and Claude Code use npm, Herdr uses its official installer, and browser-control is built from source.
 
 To install the optional i3 desktop and its configs:
 
@@ -72,7 +72,37 @@ Use `dot apply` for config-only changes. Legacy i3 and Alacritty configs remain 
 
 Support requires a Pi 4 or Pi 5, architecture `aarch64`, and OS codename `trixie`.
 
-Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim and installs Yazi using the upstream ARM64 `.deb` through apt. It installs uv, OpenCode, Herdr, and browser-control through their existing user installation paths.
+Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim and installs Yazi using the upstream ARM64 `.deb` through apt. It installs uv, OpenCode, Pi, Claude Code, Herdr, and browser-control through their shared user installation paths.
+
+## AI coding tools
+
+All supported platforms install OpenCode, the [Pi coding agent](https://github.com/earendil-works/pi), and Claude Code by default. Missing commands are installed with npm without sudo. A prefix outside your home is changed to `~/.npm-global`, which the shared shell config adds to PATH. Pi uses `--ignore-scripts`, as recommended upstream. Existing commands are left alone, and `--skip-packages` skips these installs.
+
+The default `opencode` config includes [`@openchamber/opencode-claude@1.4.1`](https://github.com/openchamber/opencode-claude). OpenCode V2 loads the plugin and its Claude Agent SDK dependency. Requests go through the local `claude` CLI using your Claude subscription. Your existing OpenCode default and agent models do not change.
+
+To roll this out after these changes have been pushed, run on each machine:
+
+```bash
+cd ~/dotfiles
+git pull --ff-only
+./dot init --dry-run
+./dot init
+```
+
+`dot init` runs the full platform setup, including machine settings on Omarchy. `dot update` only pulls and applies configs; it does not install missing tools. If Pi and Claude Code are already installed, `dot update` is enough to deploy the plugin config.
+
+Restart your shell, then sign in on each machine:
+
+```bash
+pi --version
+claude --version
+claude auth login --claudeai
+claude auth status
+```
+
+Restart OpenCode to load the plugin, then select a model under **Claude Code**. The model list comes from your local Claude CLI and account. In Pi, use `/login` to connect a provider.
+
+Claude credentials and Pi credentials stay local. Do not copy them into this repo. The plugin requires a Claude plan; Console API keys, Bedrock, and Vertex are not supported. Use OpenCode's built-in Anthropic provider for API keys. Requests count toward your plan's limits. Keep the plugin's loopback proxy private; do not expose it through Tailscale Serve. See the upstream [terms and setup notes](https://github.com/openchamber/opencode-claude#terms-of-use-read-this-first).
 
 ## Browser automation
 
