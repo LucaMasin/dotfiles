@@ -76,7 +76,7 @@ Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim 
 
 ## AI coding tools
 
-All supported platforms install OpenCode, the [Pi coding agent](https://github.com/earendil-works/pi), and Claude Code by default. Missing commands are installed with npm without sudo. A prefix outside your home is changed to `~/.npm-global`, which the shared shell config adds to PATH. Pi uses `--ignore-scripts`, as recommended upstream. Existing commands are left alone, and `--skip-packages` skips these installs.
+All supported platforms install OpenCode, the [Pi coding agent](https://github.com/earendil-works/pi), and Claude Code by default. Missing commands are installed with npm without sudo. A prefix outside your home is changed to `~/.npm-global`, which the shared shell config adds to PATH. Pi uses `--ignore-scripts`, as recommended upstream; OpenCode and Claude Code pass `--allow-scripts` for their own postinstall steps. Existing commands are left alone, and `--skip-packages` skips these installs.
 
 The default `opencode` config includes [`@openchamber/opencode-claude@1.4.1`](https://github.com/openchamber/opencode-claude). OpenCode V2 loads the plugin and its Claude Agent SDK dependency. Requests go through the local `claude` CLI using your Claude subscription. Your existing OpenCode default and agent models do not change.
 

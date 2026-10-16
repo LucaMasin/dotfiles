@@ -374,9 +374,9 @@ install_cargo_tool() {
 }
 
 install_ai_tools() {
-  install_npm_tool opencode @opencode/cli
+  install_npm_tool opencode @opencode/cli --allow-scripts=@opencode/cli
   install_npm_tool pi @earendil-works/pi-coding-agent --ignore-scripts
-  install_npm_tool claude @anthropic-ai/claude-code
+  install_npm_tool claude @anthropic-ai/claude-code --allow-scripts=@anthropic-ai/claude-code
 }
 
 install_npm_tool() {

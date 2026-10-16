@@ -272,7 +272,7 @@ class DotTests(unittest.TestCase):
             (local / name).chmod(0o755)
         self.env["PATH"] = f"{local}:{self.env['PATH']}"
         output = self.run_dot("upgrade", "--dry-run")
-        self.assertIn("npm install -g @opencode/cli@latest", output)
+        self.assertIn("npm install -g @opencode/cli@latest --allow-scripts=@opencode/cli", output)
         self.assertNotIn("Neovim", output)
         self.assertIn("Building the latest stable Neovim", self.run_dot("upgrade", "--dry-run", "neovim"))
         self.assertFalse((self.home / "sudo-calls").exists())
@@ -415,9 +415,9 @@ fi''')
                 self.run_dot("init", "--platform", platform, "--configs", "nvim")
                 self.assertEqual((self.home / "npm-calls").read_text().splitlines(), [
                     f"config set prefix {self.home}/.npm-global",
-                    "install -g @opencode/cli",
+                    "install -g @opencode/cli --allow-scripts=@opencode/cli",
                     "install -g @earendil-works/pi-coding-agent --ignore-scripts",
-                    "install -g @anthropic-ai/claude-code",
+                    "install -g @anthropic-ai/claude-code --allow-scripts=@anthropic-ai/claude-code",
                 ])
 
     def test_existing_ai_tools_are_not_reinstalled(self):

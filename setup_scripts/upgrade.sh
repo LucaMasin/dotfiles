@@ -79,9 +79,9 @@ upgrade_tool() {
 
   printf 'Upgrading %s\n' "$tool"
   case "$tool" in
-    opencode) run npm install -g @opencode/cli@latest ;;
+    opencode) run npm install -g @opencode/cli@latest --allow-scripts=@opencode/cli ;;
     pi) run npm install -g @earendil-works/pi-coding-agent@latest --ignore-scripts ;;
-    claude) run npm install -g @anthropic-ai/claude-code@latest ;;
+    claude) run npm install -g @anthropic-ai/claude-code@latest --allow-scripts=@anthropic-ai/claude-code ;;
     herdr) run_shell 'upgrade Herdr' 'curl -fsSL https://herdr.dev/install.sh | sh' ;;
     starship) run_shell 'upgrade Starship' 'curl -sS https://starship.rs/install.sh | sh -s -- -y' ;;
     zoxide) run_shell 'upgrade zoxide' 'curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh' ;;
