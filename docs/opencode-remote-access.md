@@ -5,7 +5,8 @@ Set up 2026-10-16 with OpenCode v2.0.31. Replaces the pre-v2 setup, which no lon
 ## Design
 
 - The OpenCode v2 background service listens on loopback only: `http://127.0.0.1:49374`.
-- `tailscale serve` publishes it as `https://rpi5.tail89cabe.ts.net` (tailnet only, not public).
+- `tailscale serve` publishes it as `https://rpi5.tail89cabe.ts.net:8443` (tailnet only, not public).
+- Tailnet HTTPS 443 is reserved for argos (`http://127.0.0.1:8734`).
 - The server password still applies. It is stored in `~/.config/opencode/service.json`.
 - A systemd user unit starts the service at boot (lingering enabled).
 
@@ -15,10 +16,12 @@ Rejected alternatives:
 
 ## Setup steps
 
-1. Publish the loopback port on the tailnet (needs sudo, once). The rule persists in tailscaled state:
+1. Publish the loopback port on the tailnet (needs sudo, once). The rule persists in tailscaled state.
+   HTTPS 443 stays reserved for argos on `127.0.0.1:8734`:
 
    ```sh
-   sudo tailscale serve --bg --https=443 http://127.0.0.1:49374
+   sudo tailscale serve --bg --https=8443 http://127.0.0.1:49374
+   sudo tailscale serve --bg --https=443 http://127.0.0.1:8734
    tailscale serve status
    ```
 
@@ -52,14 +55,14 @@ Rejected alternatives:
 
 From a device on the tailnet:
 
-- Browser or app: run `opencode pair --url https://rpi5.tail89cabe.ts.net` on the Pi. Open the printed link or scan the QR code. Links work once and expire after 5 minutes. Sessions last 30 days. Changing the server password signs every session out.
-- Terminal: `opencode --server https://rpi5.tail89cabe.ts.net`. It prompts for the server password.
+- Browser or app: run `opencode pair --url https://rpi5.tail89cabe.ts.net:8443` on the Pi. Open the printed link or scan the QR code. Links work once and expire after 5 minutes. Sessions last 30 days. Changing the server password signs every session out.
+- Terminal: `opencode --server https://rpi5.tail89cabe.ts.net:8443`. It prompts for the server password.
 
 ## Verify
 
 ```sh
-tailscale serve status                                   # shows the proxy to 127.0.0.1:49374
-curl -s -o /dev/null -w "%{http_code}\n" https://rpi5.tail89cabe.ts.net/api/info   # 401 without credentials is expected
+tailscale serve status                                   # :443 -> 127.0.0.1:8734 (argos), :8443 -> 127.0.0.1:49374
+curl -s -o /dev/null -w "%{http_code}\n" https://rpi5.tail89cabe.ts.net:8443/api/info   # 401 without credentials is expected
 systemctl --user is-enabled opencode.service             # enabled
 loginctl show-user luca -p Linger                        # Linger=yes
 opencode service status                                  # http://127.0.0.1:49374
@@ -71,8 +74,8 @@ opencode service status                                  # http://127.0.0.1:4937
 - Change the password: `opencode service set password "<secret>"`, then `opencode service start`. This signs out all sessions.
 - Changing any service setting stops the service. Run `opencode service start` to apply it.
 - If the default port 49374 ever changes, update the serve rule:
-  `sudo tailscale serve --bg --https=443 http://127.0.0.1:<port>`.
-- Remove the tailnet exposure: `sudo tailscale serve --https=443 off`.
+  `sudo tailscale serve --bg --https=8443 http://127.0.0.1:<port>`.
+- Remove the tailnet exposure: `sudo tailscale serve --https=8443 off`. Leave HTTPS 443 alone; it serves argos.
 - Logs: `~/.local/share/opencode/log/opencode.log`.
 - Docs: https://opencode.ai/v2/docs/cli/web/ and https://opencode.ai/v2/docs/troubleshooting/
 
