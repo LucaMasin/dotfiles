@@ -67,6 +67,7 @@ OMARCHY_PACKAGES=(
   unzip
   nspr
   nss
+  tailscale
 )
 
 RASPBERRYPI_PACKAGES=(
@@ -345,6 +346,8 @@ install_user_tools() {
   install_ai_tools
   install_browser_control
   install_herdr
+  install_tailscale
+  enable_tailscaled
 }
 
 install_yazi_from_snap() {
@@ -514,6 +517,21 @@ install_herdr() {
   run_shell 'install Herdr' 'curl -fsSL https://herdr.dev/install.sh | sh'
 }
 
+install_tailscale() {
+  if command -v tailscale >/dev/null 2>&1; then
+    printf 'tailscale already installed\n'
+    return 0
+  fi
+
+  run_shell 'install Tailscale' 'curl -fsSL https://tailscale.com/install.sh | sudo sh'
+}
+
+enable_tailscaled() {
+  command -v systemctl >/dev/null 2>&1 || return 0
+
+  run sudo systemctl enable --now tailscaled
+}
+
 install_omarchy_packages() {
   [[ $SKIP_PACKAGES == false ]] || { printf 'Skipping package installation\n'; return 0; }
 
@@ -525,6 +543,7 @@ install_omarchy_packages() {
   install_ai_tools
   install_browser_control
   install_herdr
+  enable_tailscaled
 }
 
 install_raspberrypi_packages() {
@@ -560,6 +579,8 @@ install_pi_user_tools() {
   install_ai_tools
   install_browser_control
   install_herdr
+  install_tailscale
+  enable_tailscaled
 }
 
 install_yazi_from_deb() {

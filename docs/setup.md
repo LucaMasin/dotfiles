@@ -44,7 +44,7 @@ dot apply nvim tmux
 
 Setup uses apt, the GitHub CLI and NodeSource repositories, Snap for Yazi, and user installers. Node.js 24 includes npm. Neovim is built from the latest stable release in `~/repos/neovim`.
 
-The apt package list is in `setup_scripts/setup.sh`. It includes `libnspr4` and `libnss3` for Playwright Chromium. OpenCode, Pi, and Claude Code use npm, Herdr uses its official installer, and browser-control is built from source.
+The apt package list is in `setup_scripts/setup.sh`. It includes `libnspr4` and `libnss3` for Playwright Chromium. OpenCode, Pi, and Claude Code use npm, Herdr and Tailscale use their official installers, and browser-control is built from source. Tailscale also enables `tailscaled` via systemd.
 
 To install the optional i3 desktop and its configs:
 
@@ -56,7 +56,7 @@ The i3 option is Ubuntu-only. It applies `i3 polybar alacritty rofi picom` in ad
 
 ## Omarchy
 
-Setup installs native packages with `omarchy pkg add`, builds Neovim, and installs the shared user tools.
+Setup installs native packages with `omarchy pkg add` (including `tailscale`), builds Neovim, and installs the shared user tools. It enables `tailscaled` via systemd.
 
 Setup also changes these machine settings:
 
@@ -72,7 +72,7 @@ Use `dot apply` for config-only changes. Legacy i3 and Alacritty configs remain 
 
 Support requires a Pi 4 or Pi 5, architecture `aarch64`, and OS codename `trixie`.
 
-Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim and installs Yazi using the upstream ARM64 `.deb` through apt. It installs uv, OpenCode, Pi, Claude Code, Herdr, and browser-control through their shared user installation paths.
+Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim and installs Yazi using the upstream ARM64 `.deb` through apt. It installs uv, OpenCode, Pi, Claude Code, Herdr, and browser-control through their shared user installation paths. It installs Tailscale with the official installer and enables `tailscaled` via systemd.
 
 ## AI coding tools
 
@@ -91,6 +91,8 @@ git pull --ff-only
 
 `dot init` runs the full platform setup, including machine settings on Omarchy. `dot update` only pulls and applies configs; it does not install missing tools. If Pi and Claude Code are already installed, `dot update` is enough to deploy the plugin config.
 
+### Authenticate after init
+
 Restart your shell, then sign in on each machine:
 
 ```bash
@@ -103,6 +105,19 @@ claude auth status
 Restart OpenCode to load the plugin, then select a model under **Claude Code**. The model list comes from your local Claude CLI and account. In Pi, use `/login` to connect a provider.
 
 Claude credentials and Pi credentials stay local. Do not copy them into this repo. The plugin requires a Claude plan; Console API keys, Bedrock, and Vertex are not supported. Use OpenCode's built-in Anthropic provider for API keys. Requests count toward your plan's limits. Keep the plugin's loopback proxy private; do not expose it through Tailscale Serve. See the upstream [terms and setup notes](https://github.com/openchamber/opencode-claude#terms-of-use-read-this-first).
+
+## Tailscale
+
+`dot init` installs Tailscale on all platforms (official installer on Ubuntu/Raspberry Pi OS, `omarchy pkg add tailscale` on Omarchy) and enables `tailscaled`. Login stays manual per machine:
+
+```bash
+sudo systemctl enable --now tailscaled
+sudo tailscale up
+tailscale status
+tailscale ip -4
+```
+
+Approve the printed login URL in the browser. If it expires, run `sudo tailscale up` again. `dot doctor` checks for `tailscale`; upgrade it with the system package manager, not `dot upgrade`.
 
 ## Browser automation
 

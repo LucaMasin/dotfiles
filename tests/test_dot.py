@@ -328,7 +328,7 @@ fi''')
         tpm.write_text("#!/bin/bash\nexit 0\n")
         tpm.chmod(0o755)
         for tool in ("zsh", "nvim", "tmux", "herdr", "node", "gh", "fzf", "rg", "btop",
-                     "zoxide", "starship", "yazi", "tokei", "uv", "opencode", "pi", "claude", "browser-control"):
+                     "zoxide", "starship", "yazi", "tokei", "uv", "opencode", "pi", "claude", "tailscale", "browser-control"):
             self.mock(tool, "exit 0")
         self.run_dot("apply")
         self.run_dot("link")

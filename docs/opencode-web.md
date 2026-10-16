@@ -1,6 +1,13 @@
 # Enable tailnet-only OpenCode web access
 
-This service is optional per machine. Install Tailscale and log in before enabling it. OpenCode, systemd user services, and Tailscale Serve must be available.
+This service is optional per machine. `dot init` already installs Tailscale and enables `tailscaled`. Log in before enabling the service:
+
+```bash
+sudo tailscale up
+tailscale status
+```
+
+OpenCode, systemd user services, and Tailscale Serve must be available.
 
 ```bash
 ~/dotfiles/setup_scripts/opencode_web.sh --dry-run enable

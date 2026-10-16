@@ -68,7 +68,7 @@ link_command() {
 doctor() {
   local issues=0 tool resolved
   "$INSTALLER" check || issues=$((issues + 1))
-  for tool in git zsh nvim tmux herdr node npm gh fzf rg btop zoxide starship yazi tokei uv opencode pi claude browser-control; do
+  for tool in git zsh nvim tmux herdr node npm gh fzf rg btop zoxide starship yazi tokei uv opencode pi claude tailscale browser-control; do
     if resolved="$(command -v "$tool")"; then
       printf 'ok: %s (%s)\n' "$tool" "$resolved"
     else
