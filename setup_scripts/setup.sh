@@ -613,6 +613,34 @@ configure_omarchy_zsh_shell() {
   fi
 }
 
+configure_login_shell() {
+  local zsh_path login_shell user
+
+  command -v zsh >/dev/null 2>&1 || return 0
+  command -v chsh >/dev/null 2>&1 || {
+    printf 'chsh not found; set your login shell to zsh manually\n'
+    return 0
+  }
+  zsh_path="$(command -v zsh)"
+  user="$(id -un)"
+
+  if command -v getent >/dev/null 2>&1; then
+    login_shell="$(getent passwd "$user" | cut -d: -f7 || true)"
+  else
+    login_shell="${SHELL:-}"
+  fi
+
+  if [[ $login_shell == "$zsh_path" ]]; then
+    printf 'Login shell already set to %s\n' "$zsh_path"
+    return 0
+  fi
+
+  printf 'Setting login shell to %s for %s\n' "$zsh_path" "$user"
+  if ! run chsh -s "$zsh_path"; then
+    printf 'warning: could not change login shell automatically; run: chsh -s %s\n' "$zsh_path" >&2
+  fi
+}
+
 configure_default_terminal() {
   local target="$HOME/.config/xdg-terminals.list"
 
@@ -834,6 +862,8 @@ main() {
     configure_hyprland_scrolling_layout
     reload_hyprland
   fi
+
+  configure_login_shell
 }
 
 if [[ ${BASH_SOURCE[0]} == "$0" ]]; then

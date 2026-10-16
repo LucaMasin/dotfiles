@@ -45,6 +45,8 @@ class DotTests(unittest.TestCase):
         self.mock("git", 'printf "%s\\n" "$*" >> "$HOME/git-calls"')
         self.mock("sudo", 'printf "%s\\n" "$*" >> "$HOME/sudo-calls"; exit 97')
         self.mock("omarchy", 'printf "%s\\n" "$*" >> "$HOME/omarchy-calls"; exit 97')
+        self.mock("chsh", 'printf "%s\\n" "$*" >> "$HOME/chsh-calls"')
+        self.mock("getent", 'printf "testuser:x:1000:1000::/home/testuser:/bin/bash\\n"')
 
     def mock(self, name, body):
         path = self.bin / name

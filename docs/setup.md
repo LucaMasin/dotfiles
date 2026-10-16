@@ -24,7 +24,7 @@ cd ~/dotfiles
 ./dot init
 ```
 
-Restart your shell after setup. `dot init` creates `~/.local/bin/dot`; the shared shell config adds that directory to PATH and loads completions.
+Restart your shell after setup. `dot init` creates `~/.local/bin/dot`; the shared shell config adds that directory to PATH and loads completions. `dot init` also sets zsh as your login shell with `chsh` (you may be prompted for a password); log out and back in for it to take effect.
 
 Use `--platform ubuntu`, `--platform omarchy`, or `--platform raspberrypi` only when detection needs an override.
 
@@ -118,6 +118,17 @@ tailscale ip -4
 ```
 
 Approve the printed login URL in the browser. If it expires, run `sudo tailscale up` again. `dot doctor` checks for `tailscale`; upgrade it with the system package manager, not `dot upgrade`.
+
+## GitHub CLI
+
+`dot init` installs `gh` on all platforms (apt repo on Ubuntu/Raspberry Pi OS, `github-cli` package on Omarchy). Authentication stays manual per machine:
+
+```bash
+gh auth login
+gh auth status
+```
+
+Use the interactive prompts (GitHub.com, HTTPS, browser login). Credentials stay local, never in this repo. If scopes expire, run `gh auth refresh` or `gh auth login` again.
 
 ## Browser automation
 
