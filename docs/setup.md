@@ -42,7 +42,7 @@ dot apply nvim tmux
 
 ## Ubuntu
 
-Setup uses apt, the GitHub CLI and NodeSource repositories, Snap for Yazi, and user installers. Node.js 24 includes npm. Neovim is built from the latest stable release in `~/repos/neovim`.
+Setup uses apt, the GitHub CLI and NodeSource repositories, Snap for Yazi and Obsidian, and user installers. Node.js 24 includes npm. Neovim is built from the latest stable release in `~/repos/neovim`.
 
 The apt package list is in `setup_scripts/setup.sh`. It includes `libnspr4` and `libnss3` for Playwright Chromium. OpenCode, Pi, and Claude Code use npm, Herdr and Tailscale use their official installers, and browser-control is built from source. Tailscale also enables `tailscaled` via systemd.
 

@@ -3,10 +3,33 @@ set -euo pipefail
 
 appimage="$HOME/Applications/Obsidian-1.14.4-arm64.AppImage"
 
-if [[ ! -x $appimage ]]; then
-  printf 'error: missing executable AppImage: %s\n' "$appimage" >&2
-  printf 'download Obsidian-1.14.4-arm64.AppImage from https://obsidian.md/download\n' >&2
-  exit 1
+if [[ -x $appimage ]]; then
+  exec "$appimage" --no-sandbox "$@"
 fi
 
-exec "$appimage" --no-sandbox "$@"
+# Fall back to a system-installed Obsidian (e.g. the Ubuntu snap),
+# skipping this wrapper so it never recurses into itself. Candidates are
+# compared by resolved path but executed as found, since snap's
+# /snap/bin/obsidian dispatch depends on being invoked through the symlink.
+self="$(readlink -f -- "${BASH_SOURCE[0]}")"
+is_self() {
+  local resolved
+  resolved="$(readlink -f -- "$1" 2>/dev/null || true)"
+  [[ -n $resolved && $resolved == "$self" ]]
+}
+while IFS= read -r candidate; do
+  is_self "$candidate" && continue
+  [[ -x $candidate && ! -d $candidate ]] || continue
+  exec "$candidate" "$@"
+done < <(type -aP obsidian 2>/dev/null || true)
+
+for candidate in /snap/bin/obsidian /usr/bin/obsidian /usr/local/bin/obsidian; do
+  is_self "$candidate" && continue
+  if [[ -x $candidate ]]; then
+    exec "$candidate" "$@"
+  fi
+done
+
+printf 'error: missing executable AppImage: %s\n' "$appimage" >&2
+printf 'install Obsidian (Ubuntu: sudo snap install obsidian --classic) or download Obsidian-1.14.4-arm64.AppImage from https://obsidian.md/download\n' >&2
+exit 1

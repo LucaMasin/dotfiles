@@ -330,6 +330,7 @@ install_user_tools() {
   fi
 
   install_yazi_from_snap
+  install_obsidian_from_snap
 
   if ! command -v cargo >/dev/null 2>&1; then
     run_shell 'install Rust toolchain' 'curl --proto "=https" --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y'
@@ -357,6 +358,26 @@ install_yazi_from_snap() {
   fi
 
   run sudo snap install yazi --classic
+}
+
+install_obsidian_from_snap() {
+  if [[ -x /snap/bin/obsidian ]]; then
+    printf 'obsidian already installed\n'
+    return 0
+  fi
+
+  if command -v obsidian >/dev/null 2>&1; then
+    local resolved
+    resolved="$(readlink -f -- "$(command -v obsidian)" 2>/dev/null || true)"
+    # ~/.local/bin/obsidian is this repo's delegating wrapper, not a real
+    # install, so only a binary elsewhere counts as already installed.
+    if [[ $resolved != "$HOME/.local/bin/obsidian" ]]; then
+      printf 'obsidian already installed\n'
+      return 0
+    fi
+  fi
+
+  run sudo snap install obsidian --classic
 }
 
 install_cargo_tool() {
