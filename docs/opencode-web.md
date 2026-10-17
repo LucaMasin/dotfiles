@@ -2,10 +2,10 @@
 
 > The v2 shared background service can be published directly instead. See [OpenCode v2 remote access](opencode-remote-access.md). Both use tailnet HTTPS port 443, so use one or the other on a machine.
 
-This service is optional per machine. `dot init` already installs Tailscale and enables `tailscaled`. Log in before enabling the service:
+This service is optional per machine. `dot init` already installs Tailscale and enables `tailscaled`. Log in before enabling the service (include `--ssh` so Tailscale SSH is advertised too; grant access in the admin console under Access controls):
 
 ```bash
-sudo tailscale up
+sudo tailscale up --ssh
 tailscale status
 ```
 

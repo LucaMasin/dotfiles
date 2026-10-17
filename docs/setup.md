@@ -112,12 +112,14 @@ Claude credentials and Pi credentials stay local. Do not copy them into this rep
 
 ```bash
 sudo systemctl enable --now tailscaled
-sudo tailscale up
+sudo tailscale up --ssh
 tailscale status
 tailscale ip -4
 ```
 
-Approve the printed login URL in the browser. If it expires, run `sudo tailscale up` again. `dot doctor` checks for `tailscale`; upgrade it with the system package manager, not `dot upgrade`.
+Approve the printed login URL in the browser. If it expires, run `sudo tailscale up --ssh` again. `dot doctor` checks for `tailscale`; upgrade it with the system package manager, not `dot upgrade`.
+
+The `--ssh` flag advertises Tailscale SSH on the node. Access itself is granted in the admin console under Access controls (tailnet policy); then connect from another tailnet node with `tailscale ssh <user>@<host>`.
 
 ## GitHub CLI
 
