@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+appimage="$HOME/Applications/Obsidian-1.14.4-arm64.AppImage"
+
+if [[ ! -x $appimage ]]; then
+  printf 'error: missing executable AppImage: %s\n' "$appimage" >&2
+  printf 'download Obsidian-1.14.4-arm64.AppImage from https://obsidian.md/download\n' >&2
+  exit 1
+fi
+
+exec "$appimage" --no-sandbox "$@"

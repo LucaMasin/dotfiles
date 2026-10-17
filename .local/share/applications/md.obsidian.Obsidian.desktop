@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Obsidian
+Comment=Obsidian Markdown-based knowledge base
+Exec=obsidian %U
+TryExec=obsidian
+Terminal=false
+Type=Application
+Icon=obsidian
+StartupWMClass=md.obsidian.Obsidian
+Categories=Office;
+MimeType=application/pdf;text/markdown;application/x-obsidian-canvas;application/x-obsidian-base;x-scheme-handler/obsidian;
