@@ -74,6 +74,8 @@ Support requires a Pi 4 or Pi 5, architecture `aarch64`, and OS codename `trixie
 
 Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim and installs Yazi using the upstream ARM64 `.deb` through apt. It installs uv, OpenCode, Pi, Claude Code, Herdr, and browser-control through their shared user installation paths. It installs Tailscale with the official installer and enables `tailscaled` via systemd.
 
+Obsidian has no ARM64 `.deb` or Flatpak, so setup downloads the pinned ARM64 AppImage (`Obsidian-<version>-arm64.AppImage` from the [official GitHub releases](https://github.com/obsidianmd/obsidian-releases)) into `~/Applications`. The version matches the pin in the repo launcher `.local/bin/obsidian`, which the `obsidian-bin` config links together with the `obsidian-desktop` menu entry and the `obsidian-icon` picture. These three configs join the default selection on Raspberry Pi only; `dot apply` selects them explicitly otherwise.
+
 Setup also installs and enables `systemd-resolved` and links `/etc/resolv.conf` to its stub. Without a resolver daemon, Tailscale and NetworkManager fight over `/etc/resolv.conf` and DNS eventually breaks (see [Fix DNS failing on Raspberry Pi OS](troubleshooting.md#fix-dns-failing-on-raspberry-pi-os)). A drop-in turns off resolved's mDNS and LLMNR so avahi keeps mDNS. On a machine that still has the old layout, the first `dot init` restarts NetworkManager and `tailscaled`, which drops Tailscale SSH sessions; run it from the local console, or over SSH to the LAN IP inside `tmux`.
 
 ## AI coding tools

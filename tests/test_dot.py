@@ -210,6 +210,58 @@ class DotTests(unittest.TestCase):
                 else:
                     self.assertNotIn("systemd-resolved", output)
 
+    def test_raspberrypi_default_init_previews_obsidian_configs_and_appimage(self):
+        output = self.run_dot("init", "--platform", "raspberrypi", "--dry-run")
+        for config in ("obsidian-bin", "obsidian-desktop", "obsidian-icon"):
+            self.assertIn(f"Linking {config}", output)
+        self.assertIn("Obsidian-1.14.4-arm64.AppImage", output)
+        self.assertIn("github.com/obsidianmd/obsidian-releases", output)
+        narrow = self.run_dot("init", "--platform", "raspberrypi", "--dry-run", "--configs", "zsh")
+        self.assertNotIn("Linking obsidian", narrow)
+        for platform in ("ubuntu", "omarchy"):
+            self.assertNotIn("Linking obsidian", self.run_dot("init", "--platform", platform, "--dry-run"))
+
+    def test_obsidian_appimage_installer_downloads_pinned_arm64_asset(self):
+        self.mock("curl", '''
+out=""
+while (($#)); do
+  if [[ $1 == -o ]]; then
+    out=$2
+    shift 2
+    continue
+  fi
+  shift
+done
+printf '#!/bin/sh\\necho obsidian\\n' > "$out"
+printf '%s\\n' "$out" >> "$HOME/curl-calls"
+''')
+        script = (f"source '{self.repo}/setup_scripts/setup.sh'\n"
+                  "install_obsidian_appimage\n"
+                  "install_obsidian_appimage\n")
+        result = subprocess.run(["bash", "-c", script], env=self.env, cwd=self.base,
+                                text=True, capture_output=True)
+        output = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 0, output)
+        target = self.home / "Applications/Obsidian-1.14.4-arm64.AppImage"
+        self.assertTrue(target.is_file())
+        self.assertTrue(os.access(target, os.X_OK))
+        self.assertTrue(target.read_text().startswith("#!/bin/sh"))
+        # The second call is a no-op, so curl only ran once.
+        self.assertEqual((self.home / "curl-calls").read_text().splitlines(), [str(target)])
+        self.assertEqual(output.count("already installed"), 1)
+
+    def test_obsidian_pinned_version_matches_launcher_wrapper(self):
+        setup_lines = (ROOT / "setup_scripts/setup.sh").read_text().splitlines()
+        version = [line.split('"')[1] for line in setup_lines if line.startswith('OBSIDIAN_VERSION=')][0]
+        self.assertIn(f'Obsidian-{version}-arm64.AppImage', (ROOT / ".local/bin/obsidian").read_text())
+
+    def test_setup_default_configs_mirror_dotfiles_defaults(self):
+        dotfiles_line = [line for line in (ROOT / "scripts/dotfiles.sh").read_text().splitlines()
+                         if line.startswith("DEFAULT_CONFIGS=")][0]
+        setup_line = [line for line in (ROOT / "setup_scripts/setup.sh").read_text().splitlines()
+                      if line.startswith("DEFAULT_SETUP_CONFIGS=")][0]
+        self.assertEqual(dotfiles_line.split("=", 1)[1], setup_line.split("=", 1)[1])
+
     def test_omarchy_machine_settings_are_unchanged_by_preview_and_update(self):
         settings = {
             ".config/uwsm/env": "export CUSTOM=yes\n",
@@ -409,6 +461,19 @@ fi''')
         for tool in ("starship", "zoxide", "uv", "yazi", "cargo", "tokei", "poetry",
                      "browser-control", "herdr", "make", "cmake", "curl", "wget", "gpg"):
             self.mock(tool, "exit 0")
+        self.mock("curl", '''
+out=""
+while (($#)); do
+  if [[ $1 == -o ]]; then
+    out=$2
+    shift 2
+    continue
+  fi
+  shift
+done
+printf '#!/bin/sh\\n' > "$out" 2>/dev/null || true
+exit 0
+''')
         self.mock("sudo", 'if [[ "$1" == tee ]]; then cat >/dev/null; fi')
         self.mock("omarchy", "exit 0")
         self.mock("git", 'if [[ "$1" == ls-remote ]]; then printf "abc\\trefs/tags/v0.11.0\\n"; fi')

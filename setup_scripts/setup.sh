@@ -10,6 +10,13 @@ DESKTOP="none"
 CONFIGS=()
 NODE_MAJOR=24
 NEOVIM_REPOSITORY="https://github.com/neovim/neovim.git"
+# Mirrors scripts/dotfiles.sh DEFAULT_CONFIGS so platform mixins below can
+# append machine-specific configs; tests assert both lists stay in sync.
+DEFAULT_SETUP_CONFIGS=(zsh nvim tmux herdr scripts agents opencode starship)
+# Obsidian ships Linux ARM64 only as an AppImage; the repo launcher
+# executes this exact filename, so bump it together with .local/bin/obsidian.
+OBSIDIAN_VERSION="1.14.4"
+OBSIDIAN_CONFIGS=(obsidian-bin obsidian-desktop obsidian-icon)
 
 UBUNTU_PACKAGES=(
   zsh
@@ -586,6 +593,37 @@ install_raspberrypi_packages() {
   install_pi_user_tools
 }
 
+# Obsidian has no ARM64 .deb or Flatpak, so the Pi installs the official
+# pinned ARM64 AppImage into ~/Applications; the repo launcher runs it and
+# the manifest links the menu entry and icon.
+install_obsidian_appimage() {
+  local filename="Obsidian-${OBSIDIAN_VERSION}-arm64.AppImage"
+  local target="$HOME/Applications/$filename"
+  local url="https://github.com/obsidianmd/obsidian-releases/releases/download/v${OBSIDIAN_VERSION}/$filename"
+
+  if [[ -x $target ]]; then
+    printf 'obsidian already installed (%s)\n' "$filename"
+    return 0
+  fi
+
+  run mkdir -p -- "$HOME/Applications"
+  run curl -fsSL -o "$target" "$url"
+  run chmod +x "$target"
+}
+
+# Raspberry Pi's default config selection adds the Obsidian AppImage
+# launcher, menu entry, and icon; an explicit --configs selection wins.
+add_platform_configs() {
+  local -n configs_ref=$1
+
+  if ((${#configs_ref[@]} == 0)); then
+    configs_ref=("${DEFAULT_SETUP_CONFIGS[@]}")
+    if [[ $PLATFORM == raspberrypi ]]; then
+      configs_ref+=("${OBSIDIAN_CONFIGS[@]}")
+    fi
+  fi
+}
+
 # Raspberry Pi OS has no resolver daemon, so tailscaled falls back to owning
 # /etc/resolv.conf and races NetworkManager's DHCP renewals (tailscale#18757).
 configure_systemd_resolved() {
@@ -619,6 +657,7 @@ install_pi_user_tools() {
   fi
 
   install_yazi_from_deb
+  install_obsidian_appimage
 
   if command -v pipx >/dev/null 2>&1 && ! command -v poetry >/dev/null 2>&1; then
     run pipx install poetry
@@ -828,6 +867,7 @@ apply_configs() {
   fi
 
   printf 'Applying dotfiles config\n'
+  add_platform_configs configs
   "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" install "${configs[@]}"
 }
 
@@ -845,6 +885,7 @@ validate_configs() {
       configs+=(i3 polybar alacritty rofi picom)
     fi
   fi
+  add_platform_configs configs
   "$DOTFILES_DIR/scripts/dotfiles.sh" "${args[@]}" validate "${configs[@]}"
 }
 
