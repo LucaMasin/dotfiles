@@ -74,6 +74,8 @@ Support requires a Pi 4 or Pi 5, architecture `aarch64`, and OS codename `trixie
 
 Setup uses apt and the GitHub CLI and NodeSource repositories. It builds Neovim and installs Yazi using the upstream ARM64 `.deb` through apt. It installs uv, OpenCode, Pi, Claude Code, Herdr, and browser-control through their shared user installation paths. It installs Tailscale with the official installer and enables `tailscaled` via systemd.
 
+Setup also installs and enables `systemd-resolved` and links `/etc/resolv.conf` to its stub. Without a resolver daemon, Tailscale and NetworkManager fight over `/etc/resolv.conf` and DNS eventually breaks (see [Fix DNS failing on Raspberry Pi OS](troubleshooting.md#fix-dns-failing-on-raspberry-pi-os)). A drop-in turns off resolved's mDNS and LLMNR so avahi keeps mDNS. On a machine that still has the old layout, the first `dot init` restarts NetworkManager and `tailscaled`, which drops Tailscale SSH sessions; run it from the local console, or over SSH to the LAN IP inside `tmux`.
+
 ## AI coding tools
 
 All supported platforms install OpenCode, the [Pi coding agent](https://github.com/earendil-works/pi), and Claude Code by default. Missing commands are installed with npm without sudo. A prefix outside your home is changed to `~/.npm-global`, which the shared shell config adds to PATH. Pi uses `--ignore-scripts`, as recommended upstream; OpenCode and Claude Code pass `--allow-scripts` for their own postinstall steps. Existing commands are left alone, and `--skip-packages` skips these installs.

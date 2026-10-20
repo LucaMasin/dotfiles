@@ -93,6 +93,7 @@ RASPBERRYPI_PACKAGES=(
   tokei
   libnspr4
   libnss3
+  systemd-resolved
 )
 
 usage() {
@@ -580,8 +581,34 @@ install_raspberrypi_packages() {
   run sudo apt update
   run sudo apt install -y "${packages[@]}"
 
+  configure_systemd_resolved
   install_neovim_from_source
   install_pi_user_tools
+}
+
+# Raspberry Pi OS has no resolver daemon, so tailscaled falls back to owning
+# /etc/resolv.conf and races NetworkManager's DHCP renewals (tailscale#18757).
+configure_systemd_resolved() {
+  local stub=/run/systemd/resolve/stub-resolv.conf
+  local changed=false
+
+  run sudo systemctl enable --now systemd-resolved
+  # avahi already answers mDNS on 5353; keep resolved out of it.
+  run_shell 'configure systemd-resolved to leave mDNS to avahi' \
+    "[[ -f /etc/systemd/resolved.conf.d/99-dotfiles.conf ]] || { sudo mkdir -p /etc/systemd/resolved.conf.d && printf '[Resolve]\nMulticastDNS=no\nLLMNR=no\n' | sudo tee /etc/systemd/resolved.conf.d/99-dotfiles.conf >/dev/null && sudo systemctl restart systemd-resolved; }"
+
+  if [[ $(readlink -f /etc/resolv.conf 2>/dev/null) != "$stub" ]]; then
+    changed=true
+    run sudo ln -sf "$stub" /etc/resolv.conf
+  fi
+
+  # Only restart on a change: restarting tailscaled drops Tailscale SSH sessions.
+  if [[ $changed == true ]]; then
+    run sudo systemctl restart NetworkManager
+    if systemctl is-active --quiet tailscaled 2>/dev/null; then
+      run sudo systemctl restart tailscaled
+    fi
+  fi
 }
 
 install_pi_user_tools() {

@@ -199,6 +199,17 @@ class DotTests(unittest.TestCase):
                 self.assertEqual(self.snapshot(self.home), before)
                 self.assertEqual(self.snapshot(self.tmp), {})
 
+    def test_raspberrypi_init_configures_systemd_resolved_only_there(self):
+        for platform in ("ubuntu", "omarchy", "raspberrypi"):
+            with self.subTest(platform=platform):
+                output = self.run_dot("init", "--platform", platform, "--dry-run")
+                if platform == "raspberrypi":
+                    self.assertIn("systemd-resolved", output)
+                    self.assertIn("enable --now systemd-resolved", output)
+                    self.assertIn("ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf", output)
+                else:
+                    self.assertNotIn("systemd-resolved", output)
+
     def test_omarchy_machine_settings_are_unchanged_by_preview_and_update(self):
         settings = {
             ".config/uwsm/env": "export CUSTOM=yes\n",
