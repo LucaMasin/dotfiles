@@ -80,6 +80,7 @@ If uv came from a package manager, upgrade it there. Do not run `uv self update`
 
 ## 4. Projects, CI, containers
 
+- **uv projects:** upgrading certifi in `.venv` alone does not last. `uv run` and `uv sync` re-sync the venv to `uv.lock` and put the old version back. Fix the lock: `uv lock --upgrade-package certifi`, then `uv sync`. Do not do this in a project whose server is running without asking; `uv run` restarts or re-syncs are what revert the venv. Note that a newer uv may bump the lock `revision`.
 - **Lockfiles and pins:** raise any `certifi`, `pip`, `uv`, `sigstore`, or `pixi` pin below the minimums. Dependency cooldowns delay the fix; exempt these packages or wait out the window.
 - **Containers:** rebuild images to pick up system certificates. Official `python:*` Docker images are maintained downstream of CPython and may ship pip 26.2.1 (docker-library/python#1142). Expect the 3.13, 3.14, and 3.15 images to update after the CPython releases above; the maintainers said they will not update 3.11 and 3.12. In a Dockerfile, run the hash-pinned pip install from step 2 and `apt-get install --only-upgrade ca-certificates`. `ENV PIP_CERT=...` is not sufficient (rule 2).
 - **CI and builds:** use cibuildwheel ≥ 4.3.3. Its Python 3.9 pip is still vulnerable, so build with uv and set a minimum version. Pin `pip>=26.2.2` where CI creates venvs.
