@@ -41,6 +41,16 @@ sudo pacman -Syu ca-certificates
 
 macOS and Windows get this through OS updates.
 
+**Known gap, Ubuntu 26.04 (checked 2026-10-22):** after the command above, `ca-certificates` stayed at `20260816ubuntu0.26.04.1`, apt offered nothing newer, and `/etc/ssl/certs` still contained `emSign_Root_CA_-_C1`, `emSign_ECC_Root_CA_-_C3`, and `emSign_Root_CA_-_G1`. The Ubuntu changelog for that version returned 404, so whether it carries the fix is unconfirmed. Treat the system store as unfixed and say so in the report (rule 6). Re-check later:
+
+```bash
+sudo apt update && sudo apt install --only-upgrade ca-certificates
+dpkg -l ca-certificates
+ls /etc/ssl/certs | grep -i emsign   # fixed when the emSign entries are gone
+```
+
+Keep the Python tools patched in the meantime (steps 2 and 3); that does not remove system trust.
+
 ## 2. Upgrade pip in every environment
 
 Hash-pinned wheel (checksum is enforced by pip, so a MITM cannot substitute it):
