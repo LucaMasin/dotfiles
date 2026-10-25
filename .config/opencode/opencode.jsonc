@@ -7,7 +7,7 @@
       "model": "opencode-go/deepseek-v4.1-flash#max"
     },
     "build": {
-      "model": "opencode-go/muse-spark-1.3-contributor#xhigh",
+      "model": "opencode-go/deepseek-v4.1-flash#max",
       "permissions": [
         {
           "action": "subagent",
@@ -18,7 +18,7 @@
     },
     "poteto": {
       "description": "Poteto engineering style: rigorous pstack workflow via poteto-mode skill",
-      "model": "openai/gpt-6.1-sol#medium",
+      "model": "claude-code/claude-sonnet-5-5#high",
       "permissions": [
         {
           "action": "subagent",
