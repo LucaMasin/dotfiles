@@ -8,7 +8,7 @@ BACKUP_ROOT="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles-backup"
 BACKUP_DIR=""
 DRY_RUN=false
 FORCE_DISABLED=false
-DEFAULT_CONFIGS=(zsh nvim tmux herdr scripts agents opencode starship)
+DEFAULT_CONFIGS=(zsh nvim tmux herdr scripts agents opencode opencode-commands starship)
 
 die() {
   printf 'error: %s\n' "$*" >&2

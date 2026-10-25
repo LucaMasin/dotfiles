@@ -12,7 +12,7 @@ NODE_MAJOR=24
 NEOVIM_REPOSITORY="https://github.com/neovim/neovim.git"
 # Mirrors scripts/dotfiles.sh DEFAULT_CONFIGS so platform mixins below can
 # append machine-specific configs; tests assert both lists stay in sync.
-DEFAULT_SETUP_CONFIGS=(zsh nvim tmux herdr scripts agents opencode starship)
+DEFAULT_SETUP_CONFIGS=(zsh nvim tmux herdr scripts agents opencode opencode-commands starship)
 # Obsidian ships Linux ARM64 only as an AppImage; the repo launcher
 # executes this exact filename, so bump it together with .local/bin/obsidian.
 OBSIDIAN_VERSION="1.14.4"

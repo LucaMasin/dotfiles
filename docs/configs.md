@@ -10,7 +10,7 @@ name|type|source|target|enabled|description
 
 `link` creates a symlink. `source` manages a named block in a shell rc file. Sources without `/` or `~` are relative to the repo. Targets beginning with `~` resolve under the current home directory.
 
-The default selection is `zsh nvim tmux herdr scripts agents opencode starship`, defined in `scripts/dotfiles.sh` and mirrored in `setup_scripts/setup.sh` (`DEFAULT_SETUP_CONFIGS`). It is intentionally smaller than the set of enabled configs. `wezterm` remains enabled but is installed only when selected or included through `all`. On Raspberry Pi, `dot init` extends the default selection with the enabled Obsidian configs (`obsidian-bin`, `obsidian-desktop`, `obsidian-icon`); an explicit `--configs` selection is applied as given.
+The default selection is `zsh nvim tmux herdr scripts agents opencode opencode-commands starship`, defined in `scripts/dotfiles.sh` and mirrored in `setup_scripts/setup.sh` (`DEFAULT_SETUP_CONFIGS`). It is intentionally smaller than the set of enabled configs. `wezterm` remains enabled but is installed only when selected or included through `all`. On Raspberry Pi, `dot init` extends the default selection with the enabled Obsidian configs (`obsidian-bin`, `obsidian-desktop`, `obsidian-icon`); an explicit `--configs` selection is applied as given.
 
 Disabled configs require explicit opt-in. `opencode-web` uses its dedicated service installer. The legacy desktop configs stay disabled unless you select Ubuntu i3 setup, enable their manifest entries, or explicitly use `--force-disabled`.
 
