@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=setup.sh
 source "$SCRIPT_DIR/setup.sh"
 
-DEFAULT_TOOLS=(opencode pi claude herdr starship zoxide uv tokei browser-control)
-OPT_IN_TOOLS=(neovim)
+DEFAULT_TOOLS=(npm pnpm opencode pi claude herdr starship zoxide uv tokei browser-control)
+OPT_IN_TOOLS=(neovim apt)
 
 usage() {
   cat <<EOF
@@ -14,7 +14,7 @@ Usage: dot upgrade [tool...] [--with tool[,tool...]] [--dry-run]
 
 Upgrade tools that this repo installs outside the system package manager.
 Without tool names, upgrades: ${DEFAULT_TOOLS[*]}.
-Opt-in tools (never upgraded by default): ${OPT_IN_TOOLS[*]}.
+Opt-in tools (never upgraded by default; apt needs sudo and runs apt update + upgrade on Ubuntu/Raspberry Pi OS): ${OPT_IN_TOOLS[*]}.
 
 Options:
   --with       Add opt-in tools to the default set (e.g. --with neovim).
@@ -41,6 +41,20 @@ user_installed() {
   [[ $(readlink -f -- "$path") == "$HOME"/* ]]
 }
 
+# True when npm's global prefix is under $HOME, so global installs need no sudo.
+npm_prefix_user_owned() {
+  local prefix
+  prefix="$(npm config get prefix 2>/dev/null)" || return 1
+  [[ $prefix == "$HOME"/* ]]
+}
+
+# True when the command's PATH entry (shims not resolved) lives under $HOME.
+user_installed_path() {
+  local path
+  path="$(command -v "$1" 2>/dev/null)" || return 1
+  [[ $path == "$HOME"/* ]]
+}
+
 upgrade_browser_control() {
   local repo_dir="$HOME/repos/browser-control"
   if [[ ! -d $repo_dir/.git ]]; then
@@ -56,6 +70,25 @@ upgrade_browser_control() {
   hash -r 2>/dev/null || true
 }
 
+upgrade_apt() {
+  local platform
+  platform="$(detect_platform 2>/dev/null || true)"
+  case "$platform" in
+    ubuntu|raspberrypi) ;;
+    *)
+      printf 'apt: not an apt platform (detected: %s), skipping; use the system package manager\n' "${platform:-unknown}"
+      return 0
+      ;;
+  esac
+  if ! command -v apt >/dev/null 2>&1; then
+    printf 'apt: command not found, skipping\n'
+    return 0
+  fi
+  printf 'Upgrading apt packages (sudo required; review the prompt before confirming)\n'
+  run sudo apt update
+  run sudo apt upgrade
+}
+
 upgrade_tool() {
   local tool="$1" command_name="$1"
 
@@ -68,17 +101,45 @@ upgrade_tool() {
     return 0
   fi
 
+  if [[ $tool == apt ]]; then
+    upgrade_apt
+    return 0
+  fi
+
   if ! command -v "$command_name" >/dev/null 2>&1; then
     printf '%s: not installed, skipping (use dot init)\n' "$tool"
     return 0
   fi
-  if ! user_installed "$command_name"; then
-    printf '%s: managed by the system package manager, skipping\n' "$tool"
-    return 0
-  fi
+  case "$tool" in
+    npm|pnpm|opencode|pi|claude)
+      if ! npm_prefix_user_owned; then
+        printf '%s: npm global prefix is outside $HOME, skipping (run dot init to configure a user-owned prefix)\n' "$tool"
+        return 0
+      fi
+      # npm itself usually lives in /usr; the user prefix install shadows it.
+      if [[ $tool != npm ]] && ! user_installed_path "$command_name"; then
+        printf '%s: not installed under $HOME, skipping\n' "$tool"
+        return 0
+      fi
+      ;;
+    *)
+      if ! user_installed "$command_name"; then
+        printf '%s: managed by the system package manager, skipping\n' "$tool"
+        return 0
+      fi
+      ;;
+  esac
 
   printf 'Upgrading %s\n' "$tool"
   case "$tool" in
+    npm) run npm install -g npm@latest ;;
+    pnpm)
+      if [[ $(readlink -f -- "$(command -v pnpm)") == *corepack* ]]; then
+        run corepack install -g pnpm@latest
+      else
+        run npm install -g pnpm@latest
+      fi
+      ;;
     opencode) run npm install -g @opencode/cli@latest --allow-scripts=@opencode/cli ;;
     pi) run npm install -g @earendil-works/pi-coding-agent@latest --ignore-scripts ;;
     claude) run npm install -g @anthropic-ai/claude-code@latest --allow-scripts=@anthropic-ai/claude-code ;;
@@ -117,7 +178,15 @@ main() {
     is_known_tool "$item" || die "unknown tool: $item (known: ${DEFAULT_TOOLS[*]} ${OPT_IN_TOOLS[*]})"
   done
 
+  # System packages (e.g. nodejs) go first so later tools build on them.
+  local ordered=()
   for item in "${tools[@]}"; do
+    [[ $item != apt ]] || ordered+=(apt)
+  done
+  for item in "${tools[@]}"; do
+    [[ $item == apt ]] || ordered+=("$item")
+  done
+  for item in "${ordered[@]}"; do
     upgrade_tool "$item"
   done
 }

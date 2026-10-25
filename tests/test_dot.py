@@ -334,11 +334,49 @@ printf '%s\\n' "$out" >> "$HOME/curl-calls"
             (local / name).write_text("#!/usr/bin/env bash\n")
             (local / name).chmod(0o755)
         self.env["PATH"] = f"{local}:{self.env['PATH']}"
+        self.mock("npm", 'printf "%s/.npm-global\\n" "$HOME"')
         output = self.run_dot("upgrade", "--dry-run")
         self.assertIn("npm install -g @opencode/cli@latest --allow-scripts=@opencode/cli", output)
+        self.assertIn("npm install -g npm@latest", output)
         self.assertNotIn("Neovim", output)
         self.assertIn("Building the latest stable Neovim", self.run_dot("upgrade", "--dry-run", "neovim"))
         self.assertFalse((self.home / "sudo-calls").exists())
+
+    def test_upgrade_apt_is_opt_in_and_dry_run_safe(self):
+        self.assertNotIn("apt", self.run_dot("upgrade", "--dry-run", "uv"))
+        output = self.run_dot("upgrade", "--dry-run", "apt")
+        self.assertTrue("sudo apt upgrade" in output or "not an apt platform" in output or "skipping" in output)
+        self.assertFalse((self.home / "sudo-calls").exists())
+        output = self.run_dot("upgrade", "--dry-run", "uv", "--with", "apt")
+        self.assertLess(output.index("apt"), output.index("uv"))
+
+    def test_upgrade_npm_tools_skip_system_prefix(self):
+        local = self.home / ".local/bin"
+        local.mkdir(parents=True)
+        for name in ("opencode", "pnpm"):
+            (local / name).write_text("#!/usr/bin/env bash\n")
+            (local / name).chmod(0o755)
+        self.env["PATH"] = f"{local}:{self.env['PATH']}"
+        self.mock("npm", 'printf "/usr\\n"')
+        output = self.run_dot("upgrade", "--dry-run", "npm", "pnpm", "opencode")
+        self.assertEqual(output.count("npm global prefix is outside $HOME, skipping"), 3)
+        self.assertNotIn("npm install -g", output)
+
+    def test_upgrade_pnpm_uses_npm_or_corepack(self):
+        local = self.home / ".npm-global/bin"
+        local.mkdir(parents=True)
+        (local / "pnpm").write_text("#!/usr/bin/env bash\n")
+        (local / "pnpm").chmod(0o755)
+        self.env["PATH"] = f"{local}:{self.env['PATH']}"
+        self.mock("npm", 'printf "%s/.npm-global\\n" "$HOME"')
+        self.assertIn("npm install -g pnpm@latest", self.run_dot("upgrade", "--dry-run", "pnpm"))
+        cp = self.home / "corepack/dist"
+        cp.mkdir(parents=True)
+        (cp / "pnpm.js").write_text("")
+        (local / "pnpm").unlink()
+        (local / "pnpm").symlink_to(cp / "pnpm.js")
+        (cp / "pnpm.js").chmod(0o755)
+        self.assertIn("corepack install -g pnpm@latest", self.run_dot("upgrade", "--dry-run", "pnpm"))
 
     def test_browser_control_upgrade_finds_pnpm_in_custom_npm_prefix(self):
         for name in ("bash", "dirname", "readlink", "mkdir"):

@@ -43,9 +43,9 @@ dot upgrade --with neovim
 dot upgrade --dry-run
 ```
 
-Upgrade refreshes tools this repo installs outside the system package manager: `opencode`, `pi`, `claude` (npm `@latest`), `herdr`, `starship`, `zoxide`, `uv`, `tokei`, and `browser-control` (pull, install, build, link). Naming tools upgrades only those. Missing tools are skipped; `dot init` installs them. Tools resolving outside `$HOME` (apt, snap, pacman) are skipped and left to the system package manager.
+Upgrade refreshes tools this repo installs outside the system package manager: `npm` and `pnpm` themselves (first, so later installs use them; corepack-managed pnpm is updated via corepack), `opencode`, `pi`, `claude` (npm `@latest`), `herdr`, `starship`, `zoxide`, `uv`, `tokei`, and `browser-control` (pull, install, build, link). Naming tools upgrades only those. Missing tools are skipped; `dot init` installs them. Tools resolving outside `$HOME` (apt, snap, pacman) are skipped and left to the system package manager. The npm-based tools (`npm`, `pnpm`, `opencode`, `pi`, `claude`) are checked against npm's global prefix instead: if it is outside `$HOME`, they are skipped until `dot init` configures `~/.npm-global`. This also lets `npm` upgrade when the apt/NodeSource copy lives in `/usr`.
 
-Neovim is opt-in because it is a source build that needs `sudo`. Use `--with neovim` or `dot upgrade neovim`. Running `dot update` never upgrades tools.
+Neovim is opt-in because it is a source build that needs `sudo`. Use `--with neovim` or `dot upgrade neovim`. `--with apt` (or `dot upgrade apt`) runs `sudo apt update && sudo apt upgrade` on Ubuntu and Raspberry Pi OS, always first so later tools build on the updated system packages; it is skipped on Omarchy. Running `dot update` never upgrades tools.
 
 ## Update
 
