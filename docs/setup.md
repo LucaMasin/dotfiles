@@ -138,13 +138,15 @@ Use the interactive prompts (GitHub.com, HTTPS, browser login). Credentials stay
 
 ## Browser automation
 
-Use the WSL-local Playwright Chromium, not a personal Windows browser. Install its browser build using an environment with Playwright installed:
+Use the dedicated automation Chromium profile, not a personal browser. The launcher picks a Playwright Chromium when present and otherwise falls back to a system Chromium-family browser (`chromium`, `google-chrome-stable`, `brave-browser`), loads the unpacked extension, and keeps an isolated profile in `~/.browser-control/chromium`:
 
 ```bash
-python -m playwright install chromium
 ~/scripts/browser-control-chromium.sh
 browser-control doctor
+browser-control execute 'return page.url()'
 ```
+
+The launcher unsets `DBUS_SESSION_BUS_ADDRESS`: on some hosts Chromium's network stack stalls on every request, loopback included, when it inherits the desktop session bus, and the automation profile needs no portals. It also auto-detects `WAYLAND_DISPLAY` so it can start from a plain login shell. If a Playwright browser build is preferred, install it in an environment with Playwright (`python -m playwright install chromium`).
 
 Setup builds browser-control in `~/repos/browser-control` and exposes it through `bun link`. `dot upgrade browser-control` updates it, or do it manually:
 
