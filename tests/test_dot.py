@@ -547,16 +547,22 @@ fi''')
         self.assertNotIn("npm install", output)
         self.assertFalse((self.home / ".npmrc").exists())
 
-    def test_opencode_config_ships_claude_plugin(self):
+    def test_opencode_config_uses_builtin_claude_agent_provider(self):
         config = json.loads((ROOT / ".config/opencode/opencode.jsonc").read_text())
-        self.assertEqual(config["plugins"], ["@openchamber/opencode-claude@1.4.1"])
+        self.assertNotIn("plugins", config)
+        models = {name: agent["model"] for name, agent in config["agents"].items()
+                  if "claude" in agent["model"]}
+        self.assertEqual(models, {
+            "poteto": "claude-agent/sonnet#high",
+            "plan": "claude-agent/opus#medium",
+            "ui": "claude-agent/sonnet#high",
+        })
         target = self.repo / ".config/opencode/opencode.jsonc"
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / ".config/opencode/opencode.jsonc", target)
         self.run_dot("apply", "opencode")
         installed = self.home / ".config/opencode/opencode.jsonc"
-        self.assertEqual(json.loads(installed.read_text())["plugins"],
-                         ["@openchamber/opencode-claude@1.4.1"])
+        self.assertNotIn("plugins", json.loads(installed.read_text()))
 
 
 if __name__ == "__main__":

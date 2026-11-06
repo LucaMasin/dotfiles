@@ -5,16 +5,16 @@ feature, refactoring: opencode-go/deepseek-v4.1-flash
 bug-fix: opencode-go/deepseek-v4.1-flash
 perf-issue: opencode-go/deepseek-v4.1-flash
 hillclimb: opencode-go/deepseek-v4.1-flash
-judgment and prose: claude-code/claude-sonnet-5-5
-hardest tasks: claude-code/claude-sonnet-5-5
+judgment and prose: claude-agent/sonnet
+hardest tasks: claude-agent/sonnet
 how explorer: opencode-go/deepseek-v4.1-flash
-how explainer: claude-code/claude-sonnet-5-5
+how explainer: claude-agent/sonnet
 why investigators: opencode-go/deepseek-v4.1-flash
-why synthesizer: claude-code/claude-sonnet-5-5
+why synthesizer: claude-agent/sonnet
 reflect tooling: opencode-go/deepseek-v4.1-flash
-reflect judgment, divergent, synthesizer: claude-code/claude-sonnet-5-5
-arena runners: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-code/claude-sonnet-5-5
-arena cross-judge pool: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-code/claude-sonnet-5-5
+reflect judgment, divergent, synthesizer: claude-agent/sonnet
+arena runners: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-agent/sonnet
+arena cross-judge pool: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-agent/sonnet
 swarm workers: opencode-go/deepseek-v4.1-flash
-architect runners: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-code/claude-sonnet-5-5
-interrogate reviewers: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-code/claude-sonnet-5-5
+architect runners: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-agent/sonnet
+interrogate reviewers: opencode-go/muse-spark-1.3-contributor, opencode-go/deepseek-v4.1-flash, claude-agent/sonnet

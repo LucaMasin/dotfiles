@@ -82,7 +82,7 @@ Setup also installs and enables `systemd-resolved` and links `/etc/resolv.conf` 
 
 All supported platforms install OpenCode, the [Pi coding agent](https://github.com/earendil-works/pi), and Claude Code by default. Missing commands are installed with npm without sudo. A prefix outside your home is changed to `~/.npm-global`, which the shared shell config adds to PATH. Pi uses `--ignore-scripts`, as recommended upstream; OpenCode and Claude Code pass `--allow-scripts` for their own postinstall steps. Existing commands are left alone, and `--skip-packages` skips these installs.
 
-The default `opencode` config includes [`@openchamber/opencode-claude@1.4.1`](https://github.com/openchamber/opencode-claude). OpenCode V2 loads the plugin and its Claude Agent SDK dependency. Requests go through the local `claude` CLI using your Claude subscription. Your existing OpenCode default and agent models do not change.
+The default `opencode` config uses OpenCode's built-in **Claude Agent** provider (OpenCode 2.2.3 or later; it replaces the archived `@openchamber/opencode-claude` plugin). Requests go through the local `claude` CLI using your Claude subscription. The `poteto`, `ui`, and `plan` agents use the `claude-agent/sonnet` and `claude-agent/opus` aliases, which follow the latest Sonnet and Opus that your `claude` CLI offers. Your existing OpenCode default and agent models do not change.
 
 To roll this out after these changes have been pushed, run on each machine:
 
@@ -93,7 +93,7 @@ git pull --ff-only
 ./dot init
 ```
 
-`dot init` runs the full platform setup, including machine settings on Omarchy. `dot update` only pulls and applies configs; it does not install missing tools. If Pi and Claude Code are already installed, `dot update` is enough to deploy the plugin config.
+`dot init` runs the full platform setup, including machine settings on Omarchy. `dot update` only pulls and applies configs; it does not install missing tools. If Pi and Claude Code are already installed, `dot update` is enough to deploy the OpenCode config.
 
 ### Authenticate after init
 
@@ -106,9 +106,9 @@ claude auth login --claudeai
 claude auth status
 ```
 
-Restart OpenCode to load the plugin, then select a model under **Claude Code**. The model list comes from your local Claude CLI and account. In Pi, use `/login` to connect a provider.
+In OpenCode, run `/connect` and choose **Claude Agent** once per machine. The connection also loads the model list, so `opencode models | grep claude-agent` shows nothing until you do. The list comes from your local Claude CLI and account. In Pi, use `/login` to connect a provider.
 
-Claude credentials and Pi credentials stay local. Do not copy them into this repo. The plugin requires a Claude plan; Console API keys, Bedrock, and Vertex are not supported. Use OpenCode's built-in Anthropic provider for API keys. Requests count toward your plan's limits. Keep the plugin's loopback proxy private; do not expose it through Tailscale Serve. See the upstream [terms and setup notes](https://github.com/openchamber/opencode-claude#terms-of-use-read-this-first).
+Claude credentials and Pi credentials stay local. Do not copy them into this repo. OpenCode never reads Claude Code's saved login; it only runs your `claude`. Requests count toward your plan's limits. The built-in Anthropic provider is API-key only and has no plan sign-in, so use Claude Agent for the plan. `OPENCODE_CLAUDE_PATH` overrides which `claude` runs.
 
 ## Tailscale
 
