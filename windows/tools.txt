@@ -9,3 +9,4 @@ nodejs-lts|node
 bun|bun
 uv|uv
 mise|mise
+starship|starship

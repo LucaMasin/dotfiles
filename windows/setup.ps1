@@ -150,6 +150,128 @@ function Install-Tools {
     }
 }
 
+function Install-DotCommand {
+    $bin = Join-Path $HomeDir '.local\bin'
+    $shim = Join-Path $bin 'dot.cmd'
+    $launcher = Join-Path $bin 'dot-launch.ps1'
+    $script = Join-Path $PSScriptRoot 'dot.ps1'
+    $marker = '@rem Managed by dotfiles Windows setup'
+    $launcherMarker = '# Managed by dotfiles Windows setup'
+    $encodedPath = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($script))
+    $launcherContent = "$launcherMarker`r`n`$script = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('$encodedPath'))`r`n& `$script @args`r`nexit `$LASTEXITCODE`r`n"
+    $content = "@echo off`r`n$marker`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"%~dp0dot-launch.ps1`" %*`r`nexit /b %errorlevel%`r`n"
+
+    if (Test-Path -LiteralPath $shim) {
+        $existing = [IO.File]::ReadAllText($shim)
+        if (-not $existing.Contains($marker)) {
+            Write-Warning "Not registering dot: $shim already exists and is not managed by dotfiles"
+            return
+        }
+    }
+    if ((Test-Path -LiteralPath $launcher) -and -not ([IO.File]::ReadAllText($launcher).Contains($launcherMarker))) {
+        Write-Warning "Not registering dot: $launcher already exists and is not managed by dotfiles"
+        return
+    }
+    foreach ($extension in @('.exe', '.com', '.bat', '.ps1')) {
+        if (Test-Path -LiteralPath (Join-Path $bin "dot$extension")) {
+            Write-Warning "Not registering dot: another dot command exists in $bin"
+            return
+        }
+    }
+    # Do not change the real user's PATH while testing against an alternate home.
+    $realHome = [IO.Path]::GetFullPath($env:USERPROFILE).TrimEnd('\')
+    if ($HomeDir -ieq $realHome) {
+        $found = Get-Command dot -All -ErrorAction SilentlyContinue | Where-Object { $_.Source -ine $shim }
+        if ($found) {
+            Write-Warning "Not registering dot: another command is already available ($($found[0].Source))"
+            return
+        }
+    }
+    if ((Test-Path -LiteralPath $shim) -and $existing -ceq $content) {
+        Write-Host "ok: $shim is current"
+    } else {
+        Say "write $shim"
+        if (-not $DryRun) {
+            New-Item -ItemType Directory -Force -Path $bin | Out-Null
+            [IO.File]::WriteAllText($shim, $content, [Text.Encoding]::ASCII)
+        }
+    }
+    if ((Test-Path -LiteralPath $launcher) -and [IO.File]::ReadAllText($launcher) -ceq $launcherContent) {
+        Write-Host "ok: $launcher is current"
+    } else {
+        Say "write $launcher"
+        if (-not $DryRun) {
+            New-Item -ItemType Directory -Force -Path $bin | Out-Null
+            [IO.File]::WriteAllText($launcher, $launcherContent, [Text.Encoding]::ASCII)
+        }
+    }
+    if ($HomeDir -ine $realHome) { return }
+    $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+    $paths = @($userPath -split ';' | Where-Object { $_ })
+    $onPath = @($paths | Where-Object { [Environment]::ExpandEnvironmentVariables($_).TrimEnd('\') -ieq $bin.TrimEnd('\') }).Count -gt 0
+    if (-not $onPath) {
+        Say "add $bin to user PATH"
+        if (-not $DryRun) {
+            [Environment]::SetEnvironmentVariable('Path', (($paths + $bin) -join ';'), 'User')
+        }
+    }
+}
+
+function Install-StarshipConfig {
+    $config = Join-Path $HomeDir '.config\starship.toml'
+    $source = Join-Path $RepoRoot '.config\starship.toml'
+    if (Test-Path -LiteralPath $config) {
+        Write-Host "keep: existing Starship config $config"
+    } else {
+        Say "copy Starship config to $config"
+        if (-not $DryRun) {
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $config) | Out-Null
+            Copy-Item -LiteralPath $source -Destination $config
+        }
+    }
+
+    $realHome = [IO.Path]::GetFullPath($env:USERPROFILE).TrimEnd('\')
+    $documents = if ($HomeDir -ieq $realHome) {
+        [Environment]::GetFolderPath('MyDocuments')
+    } else { Join-Path $HomeDir 'Documents' }
+    $begin = '# >>> dotfiles starship >>>'
+    $end = '# <<< dotfiles starship <<<'
+    $block = "$begin`r`nif (Get-Command starship -ErrorAction SilentlyContinue) { Invoke-Expression (&starship init powershell) }`r`n$end`r`n"
+    foreach ($folder in @('WindowsPowerShell', 'PowerShell')) {
+        $profilePath = Join-Path (Join-Path $documents $folder) 'profile.ps1'
+        $existing = ''
+        if (Test-Path -LiteralPath $profilePath) {
+            $item = Get-Item -LiteralPath $profilePath -Force
+            if (Test-Reparse $item) { Write-Warning "Skipping linked profile $profilePath"; continue }
+            $existing = [IO.File]::ReadAllText($profilePath)
+        }
+        if ($existing.Contains($begin) -or $existing.Contains($end)) {
+            if (-not ($existing.Contains($begin) -and $existing.Contains($end))) { throw "Unbalanced Starship markers in $profilePath" }
+            Write-Host "ok: Starship block exists in $profilePath"
+            continue
+        }
+        if ($existing -match '(?im)^\s*[^#\r\n]*\bstarship\s+init\s+powershell\b') {
+            Write-Warning "Skipping ${profilePath}: Starship initialization already exists"
+            continue
+        }
+        Say "add Starship initialization to $profilePath"
+        if ($DryRun) { continue }
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $profilePath) | Out-Null
+        if (Test-Path -LiteralPath $profilePath) {
+            # Append bytes without changing the profile's existing encoding or content.
+            $bytes = [IO.File]::ReadAllBytes($profilePath)
+            $encoding = if ($bytes.Length -ge 2 -and $bytes[0] -eq 255 -and $bytes[1] -eq 254) { [Text.Encoding]::Unicode }
+                elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 254 -and $bytes[1] -eq 255) { [Text.Encoding]::BigEndianUnicode }
+                else { [Text.Encoding]::UTF8 }
+            $append = $encoding.GetBytes("`r`n$block")
+            $stream = [IO.File]::Open($profilePath, [IO.FileMode]::Append, [IO.FileAccess]::Write)
+            try { $stream.Write($append, 0, $append.Length) } finally { $stream.Dispose() }
+        } else {
+            [IO.File]::WriteAllText($profilePath, $block, (New-Object Text.UTF8Encoding($false)))
+        }
+    }
+}
+
 if ($Update) {
     Say "git -C $RepoRoot pull --ff-only"
     if (-not $DryRun) {
@@ -162,6 +284,9 @@ Say "git -C $RepoRoot config core.longpaths true"
 if (-not $DryRun) { git -C $RepoRoot config core.longpaths true }
 
 if ($SkipTools) { Write-Host 'skip: tools' } else { Install-Tools }
+
+Install-DotCommand
+Install-StarshipConfig
 
 # Skills: a real ~\.agents\skills holding one junction per skill.
 $skillsSource = Join-Path $RepoRoot '.agents\skills'

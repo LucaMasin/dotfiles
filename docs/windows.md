@@ -15,6 +15,8 @@ powershell -ExecutionPolicy Bypass -File windows\setup.ps1
 
 Open a new terminal afterwards so PATH changes apply, then restart OpenCode Desktop and Codex. In Codex, run `/skills` to confirm the skills are visible. After `git pull`, rerun the script to link new skills; `-Update` pulls first.
 
+The setup also registers `dot` for PowerShell and Command Prompt. After opening a new terminal, use `dot init` to redeploy, `dot update` to pull and redeploy, or `dot upgrade` to update Scoop-managed tools listed in `windows/tools.txt`. Upgrade skips tools not installed with Scoop and does not update other Scoop apps or refresh buckets; run `scoop update` separately to refresh manifests. All three accept `--dry-run`; init and update also accept `--skip-tools`. `dot help` lists Windows commands. Linux-specific commands such as `dot apply` are not supported on Windows. Registration leaves an existing `dot` command or unmanaged shim alone and prints a warning instead. The shim points to this checkout; rerun setup if it moves.
+
 | Option | Effect |
 | --- | --- |
 | `-DryRun` | Print changes without writing |
@@ -28,6 +30,7 @@ Open a new terminal afterwards so PATH changes apply, then restart OpenCode Desk
 - **Tools:** reads `windows/tools.txt` and runs `scoop install` for each app whose command is not already on PATH. Scoop installs per user and needs no admin prompt. Install Scoop from https://scoop.sh first; the script stops with a message if it is missing. Tools that exist from another installer (Git, GitHub CLI, uv) are left alone.
 - **Skills:** makes `%USERPROFILE%\.agents\skills` a real folder and adds one directory junction per skill that points into the clone. Junctions need neither admin rights nor Developer Mode. Both OpenCode and Codex read this folder. Stale junctions for removed or excluded skills are deleted; real folders and skills installed by other tools are left alone, and a real folder with a colliding name is moved to the backup first.
 - **Commands:** junctions `%USERPROFILE%\.config\opencode\commands` to the repo's OpenCode commands (the `/impeccable` wrapper).
+- **dot:** writes managed `dot.cmd` and `dot-launch.ps1` shims to `%USERPROFILE%\.local\bin`, and adds that directory to the user PATH if needed. With `-HomeDir`, shims are written there but the real user PATH is not changed.
 - **Agent notes:** adds a marked block from `windows/agent-notes.md` to `%USERPROFILE%\.codex\AGENTS.md` and `%USERPROFILE%\.config\opencode\AGENTS.md`. It tells the agents how to run the Linux-style skill scripts on Windows. Your own text in those files is kept; the block is replaced on rerun.
 - **Backups:** anything replaced goes to `%USERPROFILE%\.local\state\dotfiles-backup\<timestamp>\`.
 
@@ -36,6 +39,10 @@ Open a new terminal afterwards so PATH changes apply, then restart OpenCode Desk
 - `browser-control` and `diagnose-crash`. `browser-control` needs its CLI built from source (`bun link`) and a dedicated automation Chromium, neither of which this setup provides, and `diagnose-crash` is an Omarchy symlink.
 - `~/.agents/pstack-models.md`. It names Linux-side model IDs. Run the `setup-pstack` skill on Windows to create one; the pstack skills fall back to defaults without it.
 - The OpenCode config (`opencode.jsonc`). It pins a Claude plugin and per-agent models for the Linux machines.
+
+## Starship in PowerShell
+
+Windows setup installs Starship through Scoop if it is missing, and adds a guarded initialization block to the current user's all-hosts profiles for Windows PowerShell and PowerShell 7. Existing profile content is preserved, and an existing Starship initialization is left alone. It copies the repo's `.config\starship.toml` to `$HOME\.config\starship.toml` only if no config exists; subsequent edits and existing configs are left untouched. `-SkipTools` skips installing Starship but still sets up the profiles and config. Open a new PowerShell session to see the prompt; `STARSHIP_CONFIG`, if set, still takes precedence.
 
 ## Line endings
 
