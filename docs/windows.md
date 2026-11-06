@@ -55,7 +55,7 @@ The setup also registers `dot` for PowerShell and Command Prompt. After opening 
 
 ## Claude Code and models
 
-Windows uses OpenCode's native Claude Agent provider instead of the `@openchamber/opencode-claude` plugin pinned for Linux. Setup installs Claude Code when `claude` is missing, and `claude` updates itself afterwards.
+Windows uses OpenCode's native Claude Agent provider, the same as Linux. Setup installs Claude Code when `claude` is missing, and `claude` updates itself afterwards.
 
 One-time setup per machine:
 
@@ -63,7 +63,7 @@ One-time setup per machine:
 2. Connect the integration in OpenCode Desktop under Settings → Providers → **Claude Agent**, or run `opencode auth login claude-agent --standalone` when the OpenCode CLI is on PATH.
 3. Restart OpenCode Desktop after the first setup so the process inherits the updated PATH. A running app keeps the PATH it started with, and the Claude provider lists no models when it cannot find `claude.exe`.
 
-`windows/opencode.jsonc` points the Claude agents at `claude-agent/claude-sonnet-5#high` and `claude-agent/claude-opus-5#medium`. The model list is discovered from the local Claude Code CLI and depends on the Claude plan; check it with the model picker or `opencode models`.
+`windows/opencode.jsonc` points the Claude agents at `claude-agent/sonnet#high` and `claude-agent/opus#medium`, the same aliases as the Linux config; they follow the latest Sonnet and Opus that the local `claude` offers. The model list is discovered from the local Claude Code CLI and depends on the Claude plan; check it with the model picker or `opencode models`.
 
 ## Starship in PowerShell
 
