@@ -33,7 +33,7 @@ Open a new terminal afterwards so PATH changes apply, then restart OpenCode Desk
 
 ## Not deployed
 
-- `browser-control` and `diagnose-crash`. Browser control drives the WSL-local Chromium only, and `diagnose-crash` is an Omarchy symlink.
+- `browser-control` and `diagnose-crash`. `browser-control` needs its CLI built from source (`bun link`) and a dedicated automation Chromium, neither of which this setup provides, and `diagnose-crash` is an Omarchy symlink.
 - `~/.agents/pstack-models.md`. It names Linux-side model IDs. Run the `setup-pstack` skill on Windows to create one; the pstack skills fall back to defaults without it.
 - The OpenCode config (`opencode.jsonc`). It pins a Claude plugin and per-agent models for the Linux machines.
 
