@@ -13,6 +13,8 @@ curl -fsSL https://raw.githubusercontent.com/LucaMasin/dotfiles/main/auto_instal
 
 Setup detects Ubuntu, Omarchy, or Raspberry Pi OS automatically. Raspberry Pi support requires a Pi 4 or Pi 5 with 64-bit Trixie. Restart your shell after setup to use `dot` globally.
 
+On Windows, only the agent skills and their tools are supported (for OpenCode Desktop and Codex): run `windows\setup.ps1` from PowerShell. See [docs/windows.md](docs/windows.md).
+
 ## Everyday commands
 
 ```bash

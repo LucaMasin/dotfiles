@@ -2,6 +2,7 @@
 
 - [Set up a machine](setup.md): bootstrap, platforms, and desktop options.
 - [Command reference](commands.md): commands, options, and shell completions.
+- [Windows](windows.md): agent skills and CLI tools for OpenCode Desktop and Codex.
 - [Config installer](configs.md): manifest, defaults, source blocks, and backups.
 - [Troubleshooting](troubleshooting.md): diagnostics and repairs.
 - [OpenCode web service](opencode-web.md): optional tailnet access.

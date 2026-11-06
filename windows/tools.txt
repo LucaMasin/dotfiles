@@ -1,0 +1,11 @@
+# Command-line tools the agent skills need on Windows: scoop-app|command
+# An app is installed with Scoop only when its command is not already on PATH.
+git|git
+gh|gh
+ripgrep|rg
+jq|jq
+fd|fd
+nodejs-lts|node
+bun|bun
+uv|uv
+mise|mise

@@ -1,0 +1,4 @@
+# Keep scripts and skills LF on Windows checkouts so shebang scripts keep running.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf

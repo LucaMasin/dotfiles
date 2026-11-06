@@ -11,6 +11,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, CI, or pre-com
 - `setup_scripts/setup.sh`: platform package install plus config application; supports `--platform ubuntu|omarchy|raspberrypi`, `--dry-run`, `--skip-packages`, `--desktop i3`, and `--configs <comma-list>|all`.
 - `setup_scripts/upgrade.sh`: backs `dot upgrade`; sources `setup.sh` (guarded `main`) and upgrades user-installed tools (npm and pnpm themselves, npm AI CLIs, herdr, starship, zoxide, uv, tokei, browser-control); skips missing tools and ones resolving outside `$HOME`. Neovim (sudo source build) and `apt` (sudo `apt update && apt upgrade`, Ubuntu/Raspberry Pi OS only, always run first) are opt-in via `--with neovim` / `--with apt`. Preview with `--dry-run`.
 - `setup_scripts/update.sh`: delegates to `dot update`, which pulls with `git pull --ff-only` and applies configs without platform desktop changes or package upgrades.
+- `windows/setup.ps1`: Windows-only deployment of `.agents/skills` (per-skill directory junctions into `~\.agents\skills`), the OpenCode commands, and Scoop tools from `windows/tools.txt`; `windows/agent-notes.md` is written as a managed block into the Codex and OpenCode global `AGENTS.md`. Supports `-DryRun`, `-SkipTools`, `-Update`, `-ExcludeSkills`, `-HomeDir`. It skips `browser-control` and `diagnose-crash`. `.gitattributes` forces LF (CRLF for `.cmd`/`.bat`). See `docs/windows.md`.
 - `scripts/dotfiles.sh`: config-only installer driven by `dotfiles-manifest.conf`; owns default config selection and validates all selections before writing.
 - `tests/test_dot.py`: stdlib integration checks in temporary homes under `/tmp/opencode`, with mocked Git, sudo, npm, and Omarchy. No real package installation or home config changes.
 - `.config/nvim/init.lua`: Neovim entrypoint; bootstraps `lazy.nvim`, then loads `lua/vim-options.lua` and `lua/plugins/**`.
@@ -30,6 +31,7 @@ Personal Linux dotfiles repo. There is no repo-wide build system, CI, or pre-com
 - `dot init`, `dot update`, `dot apply`, `dot link`, or `dot unlink` without `--dry-run` against the real home; they modify the system, repo, or home. Isolated test fixtures are safe.
 - `auto_install.sh`, `setup_scripts/setup.sh` without `--dry-run`, or `setup_scripts/update.sh` without `--dry-run`; they can install packages, pull the repo, modify home-directory config, or run `sudo`.
 - `scripts/dotfiles.sh install ...` without `--dry-run`; it creates symlinks, edits shell rc files, backs up targets, and installs tmux plugins.
+- `windows/setup.ps1` without `-DryRun` against the real Windows home (including from WSL via `powershell.exe`); it installs Scoop packages and writes junctions and `AGENTS.md` blocks. Test with `-SkipTools -HomeDir <temp dir>` on a copy of the repo.
 - `setup_scripts/generate_github_ssh.sh`; it touches SSH/GitHub credentials.
 - `setup_scripts/opencode_web.sh enable` or `disable` without `--dry-run`; it writes credentials, installs/starts a user systemd service, enables systemd lingering, and configures Tailscale Serve.
 
