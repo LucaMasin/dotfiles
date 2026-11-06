@@ -4,10 +4,13 @@ Deploy the agent skills and the tools they need on Windows (OpenCode Desktop, Co
 
 .DESCRIPTION
 1. Installs missing command-line tools from windows\tools.txt with Scoop.
-2. Links every skill in .agents\skills into %USERPROFILE%\.agents\skills with a
+2. Installs Claude Code when `claude` is missing.
+3. Links every skill in .agents\skills into %USERPROFILE%\.agents\skills with a
    directory junction (no admin rights or Developer Mode needed).
-3. Links the OpenCode slash commands into %USERPROFILE%\.config\opencode\commands.
-4. Writes a managed Windows note (windows\agent-notes.md) into the global
+4. Links the OpenCode slash commands into %USERPROFILE%\.config\opencode\commands.
+5. Writes the Windows OpenCode config (windows\opencode.jsonc) with the native
+   Claude Agent provider to %USERPROFILE%\.config\opencode\opencode.jsonc.
+6. Writes a managed Windows note (windows\agent-notes.md) into the global
    AGENTS.md of Codex and OpenCode.
 
 Existing targets are moved to %USERPROFILE%\.local\state\dotfiles-backup\<timestamp>
@@ -17,7 +20,7 @@ before they are replaced. Re-run after `git pull` to pick up new skills.
 Print what would change without writing anything.
 
 .PARAMETER SkipTools
-Do not install tools with Scoop.
+Do not install tools with Scoop or install Claude Code.
 
 .PARAMETER Update
 Run `git pull --ff-only` in this checkout first.
@@ -147,6 +150,89 @@ function Install-Tools {
         if ($DryRun) { continue }
         scoop install $app
         if ($LASTEXITCODE) { Write-Warning "scoop install $app exited with $LASTEXITCODE" }
+    }
+}
+
+function Install-ClaudeCode {
+    $command = Get-Command claude -ErrorAction SilentlyContinue
+    if ($command) {
+        Write-Host "ok: claude is on PATH ($($command.Source))"
+        return
+    }
+    $bin = Join-Path $HomeDir '.local\bin'
+    if (Test-Path -LiteralPath (Join-Path $bin 'claude.exe')) {
+        Write-Host "ok: found $(Join-Path $bin 'claude.exe')"
+        if (($env:PATH -split ';') -notcontains $bin) { $env:PATH = "$env:PATH;$bin" }
+        return
+    }
+    $realHome = [IO.Path]::GetFullPath($env:USERPROFILE).TrimEnd('\')
+    if ($HomeDir -ine $realHome) {
+        Write-Warning 'Claude Code is missing; the official installer only targets the real home, so it is skipped with -HomeDir'
+        return
+    }
+    Say 'install Claude Code with the official installer'
+    if ($DryRun) { return }
+    $installer = Join-Path ([IO.Path]::GetTempPath()) 'claude-install.ps1'
+    Invoke-RestMethod 'https://claude.ai/install.ps1' -OutFile $installer
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $installer
+    if ($LASTEXITCODE) { throw "Claude Code installer exited with $LASTEXITCODE" }
+    $bin = Join-Path $HomeDir '.local\bin'
+    if (Test-Path -LiteralPath (Join-Path $bin 'claude.exe')) {
+        if (($env:PATH -split ';') -notcontains $bin) { $env:PATH = "$env:PATH;$bin" }
+    }
+    if (-not (Get-Command claude -ErrorAction SilentlyContinue)) {
+        throw 'Claude Code was installed, but claude is not on PATH yet. Open a new terminal and rerun setup.'
+    }
+}
+
+function Install-OpenCodeConfig {
+    $source = Join-Path $PSScriptRoot 'opencode.jsonc'
+    $target = Join-Path $HomeDir '.config\opencode\opencode.jsonc'
+    $plain = Join-Path $HomeDir '.config\opencode\opencode.json'
+    if (Test-Path -LiteralPath $plain) {
+        Write-Warning "Found $plain; OpenCode may prefer it over the deployed opencode.jsonc"
+    }
+    $content = [IO.File]::ReadAllText($source)
+    if (Test-Path -LiteralPath $target) {
+        if ([IO.File]::ReadAllText($target) -ceq $content) {
+            Write-Host "ok: $target is current"
+            return
+        }
+        Backup-Path $target
+    }
+    Say "write OpenCode config to $target"
+    if ($DryRun) { return }
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $target) | Out-Null
+    [IO.File]::WriteAllText($target, $content, (New-Object Text.UTF8Encoding($false)))
+}
+
+function Get-OpenCodeCli {
+    $command = Get-Command opencode -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+    $desktop = Join-Path $env:LOCALAPPDATA 'Programs\@opencode-aidesktop\resources\opencode-cli.exe'
+    if (Test-Path -LiteralPath $desktop) { return $desktop }
+    return $null
+}
+
+function Test-ClaudeAgent {
+    $realHome = [IO.Path]::GetFullPath($env:USERPROFILE).TrimEnd('\')
+    if ($HomeDir -ine $realHome) { return }
+    $check = Get-Command claude -ErrorAction SilentlyContinue
+    if (-not $check) {
+        Write-Warning 'Claude Code is not on PATH; the Claude agents will not work until it is installed and OpenCode is restarted.'
+        return
+    }
+    try {
+        $status = & $check.Source auth status 2>$null | ConvertFrom-Json
+        if (-not $status.loggedIn) { Write-Warning 'Claude Code is not logged in. Run: claude auth login' }
+    } catch {
+        Write-Warning "Could not read Claude Code auth status: $($_.Exception.Message)"
+    }
+    $cli = Get-OpenCodeCli
+    if (-not $cli) { return }
+    $auth = & $cli auth list 2>$null | Out-String
+    if ($auth -notmatch 'Claude Agent') {
+        Write-Warning 'OpenCode has no Claude Agent connection. Connect Claude Agent in Settings > Providers, or run: opencode auth login claude-agent --standalone'
     }
 }
 
@@ -283,10 +369,11 @@ if ($Update) {
 Say "git -C $RepoRoot config core.longpaths true"
 if (-not $DryRun) { git -C $RepoRoot config core.longpaths true }
 
-if ($SkipTools) { Write-Host 'skip: tools' } else { Install-Tools }
+if ($SkipTools) { Write-Host 'skip: tools' } else { Install-Tools; Install-ClaudeCode }
 
 Install-DotCommand
 Install-StarshipConfig
+Install-OpenCodeConfig
 
 # Skills: a real ~\.agents\skills holding one junction per skill.
 $skillsSource = Join-Path $RepoRoot '.agents\skills'
@@ -332,6 +419,7 @@ Update-ManagedBlock (Join-Path $HomeDir '.codex\AGENTS.md') $note
 Update-ManagedBlock (Join-Path $HomeDir '.config\opencode\AGENTS.md') $note
 
 # Checks that explain the most likely failures.
+Test-ClaudeAgent
 $gitBash = 'C:\Program Files\Git\bin\bash.exe'
 if (-not (Test-Path -LiteralPath $gitBash)) {
     Write-Warning "Git Bash not found at $gitBash; shell-script skills (show-me-your-work, poteto-mode) need it"

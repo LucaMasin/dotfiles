@@ -11,4 +11,5 @@ This machine runs Windows, and the installed skills were written for Linux. Adju
   - impeccable: `<skill>\scripts\impeccable.cmd <args>`
   - skill-creator: `uv run python <script>`
 - statechart installs Java and TLC with mise on first run and needs the network.
+- Claude Code lives at `%USERPROFILE%\.local\bin\claude.exe`. OpenCode's Claude models use the native `claude-agent` provider; restart OpenCode Desktop after PATH or Claude changes.
 - The browser-control and diagnose-crash skills are not installed on Windows.

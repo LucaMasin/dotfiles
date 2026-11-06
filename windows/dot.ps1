@@ -9,7 +9,7 @@ function Show-Usage {
 Usage: dot <command> [options]
 
 Windows commands:
-  init       Install tools and deploy Windows agent configuration.
+  init       Install tools, Claude Code, and deploy Windows agent configuration.
   update     Pull this checkout and deploy Windows agent configuration.
   upgrade    Upgrade installed Scoop-managed tools from windows/tools.txt.
   help       Show this help.
