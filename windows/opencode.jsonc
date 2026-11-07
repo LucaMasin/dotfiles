@@ -34,6 +34,7 @@
     },
     "ui": {
       "description": "A model specialized in designing and implementing UI",
+      "mode": "subagent",
       "model": "claude-agent/sonnet#high"
     },
     "explore": {
