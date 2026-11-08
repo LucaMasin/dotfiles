@@ -557,6 +557,14 @@ fi''')
             "plan": "claude-agent/opus#medium",
             "ui": "claude-agent/sonnet#high",
         })
+        windows_config = json.loads("\n".join(
+            line for line in (ROOT / "windows/opencode.jsonc").read_text().splitlines()
+            if not line.lstrip().startswith("//")
+        ))
+        for platform_config in (config, windows_config):
+            self.assertEqual(platform_config["providers"]["claude-agent"]["models"], {
+                "sonnet": {"limit": {"context": 200000}},
+            })
         target = self.repo / ".config/opencode/opencode.jsonc"
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / ".config/opencode/opencode.jsonc", target)

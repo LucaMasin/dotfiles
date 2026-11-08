@@ -84,6 +84,8 @@ All supported platforms install OpenCode, the [Pi coding agent](https://github.c
 
 The default `opencode` config uses OpenCode's built-in **Claude Agent** provider (OpenCode 2.2.3 or later; it replaces the archived `@openchamber/opencode-claude` plugin). Requests go through the local `claude` CLI using your Claude subscription. The `poteto`, `ui`, and `plan` agents use the `claude-agent/sonnet` and `claude-agent/opus` aliases, which follow the latest Sonnet and Opus that your `claude` CLI offers. Your existing OpenCode default and agent models do not change.
 
+The `claude-agent/sonnet` alias has a 200,000-token context limit for OpenCode's automatic compaction, including when used by `poteto` and `ui`. With the default 15% buffer, compaction starts around 170,000 tokens, not at exactly 200,000. This is a model-wide setting, so it also applies to other agents using that alias; Opus and other model IDs retain their own limits.
+
 To roll this out after these changes have been pushed, run on each machine:
 
 ```bash
@@ -106,7 +108,7 @@ claude auth login --claudeai
 claude auth status
 ```
 
-In OpenCode, run `/connect` and choose **Claude Agent** once per machine. The connection also loads the model list, so `opencode models | grep claude-agent` shows nothing until you do. The list comes from your local Claude CLI and account. In Pi, use `/login` to connect a provider.
+In OpenCode, run `/connect` and choose **Claude Agent** once per machine. The connection loads the model list from your local Claude CLI and account. The configured Sonnet alias may appear before connection, but still requires it to work. In Pi, use `/login` to connect a provider.
 
 Claude credentials and Pi credentials stay local. Do not copy them into this repo. OpenCode never reads Claude Code's saved login; it only runs your `claude`. Requests count toward your plan's limits. The built-in Anthropic provider is API-key only and has no plan sign-in, so use Claude Agent for the plan. `OPENCODE_CLAUDE_PATH` overrides which `claude` runs.
 

@@ -65,6 +65,8 @@ One-time setup per machine:
 
 `windows/opencode.jsonc` points the Claude agents at `claude-agent/sonnet#high` and `claude-agent/opus#medium`, the same aliases as the Linux config; they follow the latest Sonnet and Opus that the local `claude` offers. The model list is discovered from the local Claude Code CLI and depends on the Claude plan; check it with the model picker or `opencode models`.
 
+The Sonnet alias has a 200,000-token context limit for automatic compaction. With the default 15% buffer, compaction starts around 170,000 tokens. It applies to every agent using `claude-agent/sonnet`, including `poteto` and `ui`; Opus and other model IDs are unchanged. The configured Sonnet alias may appear in the picker before connection, but still requires it to work.
+
 ## Starship in PowerShell
 
 Windows setup installs Starship through Scoop if it is missing, and adds a guarded initialization block to the current user's all-hosts profiles for Windows PowerShell and PowerShell 7. Existing profile content is preserved, and an existing Starship initialization is left alone. It copies the repo's `.config\starship.toml` to `$HOME\.config\starship.toml` only if no config exists; subsequent edits and existing configs are left untouched. `-SkipTools` skips installing Starship but still sets up the profiles and config. Open a new PowerShell session to see the prompt; `STARSHIP_CONFIG`, if set, still takes precedence.
