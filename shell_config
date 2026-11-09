@@ -33,9 +33,10 @@ if [[ ":$PATH:" != *":$HOME/.local/bin/:"* ]]; then
     export PATH="$PATH:$HOME/.local/bin/"
 fi
 
-# Check if $HOME/.npm-global/bin/ is not already in the PATH
-if [[ ":$PATH:" != *":$HOME/.npm-global/bin/:"* ]]; then
-    export PATH="$PATH:$HOME/.npm-global/bin/"
+# $HOME/.npm-global/bin/ goes ahead of mise's shims: the mise `pi` shim fails
+# when Argos runs Pi under an isolated HOME, so the npm-installed pi must win.
+if [[ "$PATH" != "$HOME/.npm-global/bin/:"* ]]; then
+    export PATH="$HOME/.npm-global/bin/:$PATH"
 fi
 
 # Check if $HOME/.bun/bin/ is not already in the PATH (bun-linked tools like browser-control)
