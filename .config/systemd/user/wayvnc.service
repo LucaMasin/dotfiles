@@ -1,0 +1,15 @@
+[Unit]
+Description=wayvnc server for the Hyprland session (Tailscale-only)
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+# Bind only to the Tailscale IPv4 address; wait for tailscaled to come up.
+ExecStart=/bin/sh -c 'for i in $(seq 1 90); do ip=$(tailscale ip -4 2>/dev/null | head -n1); [ -n "$ip" ] && exec wayvnc "$ip" 5900; sleep 2; done; echo "tailscale IP not available" >&2; exit 1'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
