@@ -19,6 +19,7 @@ class WindowsDeploymentTests(unittest.TestCase):
         self.assertTrue(entries)
         for line in entries:
             self.assertRegex(line, r"^[a-z0-9._-]+\|[A-Za-z0-9._-]+$")
+        self.assertIn("go|go", entries)
 
     def test_setup_script_reads_files_that_exist(self):
         script = (WINDOWS / "setup.ps1").read_text()

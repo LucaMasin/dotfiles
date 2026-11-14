@@ -46,6 +46,8 @@ Setup uses apt, the GitHub CLI and NodeSource repositories, Snap for Yazi and Ob
 
 The apt package list is in `setup_scripts/setup.sh`. It includes `libnspr4` and `libnss3` for Playwright Chromium. OpenCode, Pi, and Claude Code use npm, Herdr and Tailscale use their official installers, and browser-control is built from source. Tailscale also enables `tailscaled` via systemd.
 
+Go is installed from the platform package repository (`golang-go` on Ubuntu and Raspberry Pi OS, `go` on Omarchy). The available version depends on that repository; `--skip-packages` skips it. On Windows, setup installs Go through Scoop; see [Windows setup](windows.md).
+
 To install the optional i3 desktop and its configs:
 
 ```bash

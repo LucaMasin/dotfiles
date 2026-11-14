@@ -39,7 +39,7 @@ The setup also registers `dot` for PowerShell and Command Prompt. After opening 
 
 ## What it does
 
-- **Tools:** reads `windows/tools.txt` and runs `scoop install` for each app whose command is not already on PATH. Scoop installs per user and needs no admin prompt. Install Scoop from https://scoop.sh first; the script stops with a message if it is missing. Tools that exist from another installer (Git, GitHub CLI, uv) are left alone.
+- **Tools:** reads `windows/tools.txt` and runs `scoop install` for each app whose command is not already on PATH, including Go. Scoop installs per user and needs no admin prompt. Install Scoop from https://scoop.sh first; the script stops with a message if it is missing. Tools that exist from another installer (Git, Go, GitHub CLI, uv) are left alone.
 - **Claude Code:** runs Anthropic's official installer when `claude` is missing, which places `claude.exe` in `%USERPROFILE%\.local\bin`. The CLI updates itself. Login stays manual. This step is skipped by `-SkipTools` and by `-HomeDir` (the installer only targets the real home).
 - **Skills:** makes `%USERPROFILE%\.agents\skills` a real folder and adds one directory junction per skill that points into the clone. Junctions need neither admin rights nor Developer Mode. Both OpenCode and Codex read this folder. Stale junctions for removed or excluded skills are deleted; real folders and skills installed by other tools are left alone, and a real folder with a colliding name is moved to the backup first.
 - **Commands:** junctions `%USERPROFILE%\.config\opencode\commands` to the repo's OpenCode commands (the `/impeccable` wrapper).

@@ -22,6 +22,7 @@ UBUNTU_PACKAGES=(
   zsh
   tmux
   git
+  golang-go
   fzf
   ripgrep
   btop
@@ -52,6 +53,7 @@ OMARCHY_PACKAGES=(
   zsh
   tmux
   git
+  go
   fzf
   ripgrep
   btop
@@ -81,6 +83,7 @@ RASPBERRYPI_PACKAGES=(
   zsh
   tmux
   git
+  golang-go
   fzf
   ripgrep
   btop

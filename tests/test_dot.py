@@ -199,6 +199,19 @@ class DotTests(unittest.TestCase):
                 self.assertEqual(self.snapshot(self.home), before)
                 self.assertEqual(self.snapshot(self.tmp), {})
 
+    def test_init_installs_go_with_platform_package_manager(self):
+        for platform, prefix, package in (
+            ("ubuntu", "dry-run: sudo apt install -y ", "golang-go"),
+            ("raspberrypi", "dry-run: sudo apt install -y ", "golang-go"),
+            ("omarchy", "dry-run: omarchy pkg add ", "go"),
+        ):
+            with self.subTest(platform=platform):
+                output = self.run_dot("init", "--platform", platform, "--dry-run")
+                package_line = next(line for line in output.splitlines() if line.startswith(prefix) and package in line.split())
+                self.assertIn(package, package_line.split())
+                skipped = self.run_dot("init", "--platform", platform, "--skip-packages", "--dry-run")
+                self.assertNotIn(prefix, skipped)
+
     def test_raspberrypi_init_configures_systemd_resolved_only_there(self):
         for platform in ("ubuntu", "omarchy", "raspberrypi"):
             with self.subTest(platform=platform):
