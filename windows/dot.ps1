@@ -11,12 +11,15 @@ Usage: dot <command> [options]
 Windows commands:
   init       Install tools, Claude Code, and deploy Windows agent configuration.
   update     Pull this checkout and deploy Windows agent configuration.
-  upgrade    Upgrade installed Scoop-managed tools from windows/tools.txt.
+  upgrade    Upgrade installed Scoop-managed tools from windows/tools.txt,
+             and the Heimdall agent when its service is installed.
   help       Show this help.
 
 Options:
   --dry-run     Preview changes without writing.
   --skip-tools  Do not install Scoop tools (init and update only).
+  --heimdall    Also install the Heimdall agent service (init and update only).
+                Needs gh logged in and asks for administrator rights.
 
 Linux-specific dot commands are not supported on Windows.
 '@
@@ -37,6 +40,10 @@ foreach ($option in $options) {
             if ($command -eq 'upgrade') { [Console]::Error.WriteLine('dot: --skip-tools is not valid for upgrade.'); exit 1 }
             $setupOptions.SkipTools = $true
         }
+        '--heimdall' {
+            if ($command -eq 'upgrade') { [Console]::Error.WriteLine('dot: --heimdall is not valid for upgrade; it upgrades Heimdall when installed.'); exit 1 }
+            $setupOptions.Heimdall = $true
+        }
         default { [Console]::Error.WriteLine("dot: unknown option '$option'. Run 'dot help'."); exit 1 }
     }
 }
@@ -55,6 +62,17 @@ if ($command -eq 'upgrade') {
         Write-Host "scoop update $app"
         & scoop update $app
         if ($LASTEXITCODE -ne 0) { $failed = $true; Write-Warning "scoop update $app failed" }
+    }
+    $checkout = Join-Path $env:USERPROFILE 'repos\heimdall'
+    if ((Get-Service -Name 'heimdall-agent' -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $checkout)) {
+        try {
+            & (Join-Path $PSScriptRoot 'heimdall.ps1') -DryRun:([bool]$setupOptions.DryRun) -IfChanged
+        } catch {
+            $failed = $true
+            Write-Warning "heimdall upgrade failed: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Host 'skip: heimdall is not installed'
     }
     if ($failed) { exit 1 }
     exit 0

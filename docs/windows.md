@@ -27,13 +27,14 @@ Then connect its OpenCode integration, either in OpenCode Desktop under Settings
 opencode auth login claude-agent --standalone
 ```
 
-The setup also registers `dot` for PowerShell and Command Prompt. After opening a new terminal, use `dot init` to redeploy, `dot update` to pull and redeploy, or `dot upgrade` to update Scoop-managed tools listed in `windows/tools.txt`. Upgrade skips tools not installed with Scoop and does not update other Scoop apps or refresh buckets; run `scoop update` separately to refresh manifests. All three accept `--dry-run`; init and update also accept `--skip-tools`. `dot help` lists Windows commands. Linux-specific commands such as `dot apply` are not supported on Windows. Registration leaves an existing `dot` command or unmanaged shim alone and prints a warning instead. The shim points to this checkout; rerun setup if it moves.
+The setup also registers `dot` for PowerShell and Command Prompt. After opening a new terminal, use `dot init` to redeploy, `dot update` to pull and redeploy, or `dot upgrade` to update Scoop-managed tools listed in `windows/tools.txt`. Upgrade skips tools not installed with Scoop and does not update other Scoop apps or refresh buckets; run `scoop update` separately to refresh manifests. All three accept `--dry-run`; init and update also accept `--skip-tools` and `--heimdall`. `dot upgrade` also upgrades the Heimdall agent when its service is installed. `dot help` lists Windows commands. Linux-specific commands such as `dot apply` are not supported on Windows. Registration leaves an existing `dot` command or unmanaged shim alone and prints a warning instead. The shim points to this checkout; rerun setup if it moves.
 
 | Option | Effect |
 | --- | --- |
 | `-DryRun` | Print changes without writing |
 | `-SkipTools` | Do not install anything (Scoop tools, Claude Code) |
 | `-Update` | `git pull --ff-only` before linking |
+| `-Heimdall` | Also install the Heimdall agent service (see below) |
 | `-ExcludeSkills a,b` | Skills to leave out (default `browser-control,diagnose-crash`) |
 | `-HomeDir <path>` | Deploy into another home, for testing |
 
@@ -66,6 +67,21 @@ One-time setup per machine:
 `windows/opencode.jsonc` points the Claude agents at `claude-agent/sonnet#high` and `claude-agent/opus#medium`, the same aliases as the Linux config; they follow the latest Sonnet and Opus that the local `claude` offers. The model list is discovered from the local Claude Code CLI and depends on the Claude plan; check it with the model picker or `opencode models`.
 
 The Sonnet alias has a 200,000-token context limit for automatic compaction. With the default 15% buffer, compaction starts around 170,000 tokens. It applies to every agent using `claude-agent/sonnet`, including `poteto` and `ui`; Opus and other model IDs are unchanged. The configured Sonnet alias may appear in the picker before connection, but still requires it to work.
+
+## Heimdall agent
+
+`dot init --heimdall` (or `setup.ps1 -Heimdall`) installs the agent of [Heimdall](https://github.com/LucaMasin/heimdall), a private fleet monitor, as the Windows service `heimdall-agent`. It is off by default because it installs a machine-wide service.
+
+`windows/heimdall.ps1` clones `LucaMasin/heimdall` into `%USERPROFILE%\repos\heimdall` with `gh` (or runs `git pull --ff-only` when it exists), then runs the repo's `scripts\install-windows.ps1`. That script builds the agent with Go as you, then asks for administrator rights through UAC for the service steps only. It copies the binary to `C:\Program Files\Heimdall`, creates or repairs the service with automatic start and restart on failure, registers the Event Log source, and starts it. The agent logs to the Application event log under `heimdall-agent`.
+
+- Run `gh auth login` first, because the repo is private. Without it, setup warns and skips Heimdall. Rerun `dot init --heimdall` after logging in.
+- `git`, `go` and `gh` must be on PATH. All three are in `windows/tools.txt`.
+- `--dry-run` previews the clone and the install without asking for administrator rights.
+- `dot upgrade` pulls and runs the installer with `-IfChanged`, which exits without a UAC prompt when the installed version already matches the build.
+- With `-HomeDir`, a real run is skipped, because the service is machine-wide. Only `-DryRun` runs.
+- To remove it, run `powershell -ExecutionPolicy Bypass -File $HOME\repos\heimdall\scripts\install-windows.ps1 -Uninstall`.
+
+The agent only reports once the PC is logged into Tailscale and can reach `http://heimdall`. Check it with `Get-Service heimdall-agent`.
 
 ## Starship in PowerShell
 

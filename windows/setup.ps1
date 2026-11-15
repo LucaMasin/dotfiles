@@ -13,6 +13,8 @@ Deploy the agent skills and the tools they need on Windows (OpenCode Desktop, Co
 6. Writes a managed Windows note (windows\agent-notes.md) into the global
    AGENTS.md of Codex and OpenCode.
 
+7. With -Heimdall, installs the Heimdall agent as a Windows service (windows\heimdall.ps1).
+
 Existing targets are moved to %USERPROFILE%\.local\state\dotfiles-backup\<timestamp>
 before they are replaced. Re-run after `git pull` to pick up new skills.
 
@@ -24,6 +26,10 @@ Do not install tools with Scoop or install Claude Code.
 
 .PARAMETER Update
 Run `git pull --ff-only` in this checkout first.
+
+.PARAMETER Heimdall
+Also install the Heimdall agent service. Needs gh logged in and asks for
+administrator rights (UAC). Off by default.
 
 .PARAMETER ExcludeSkills
 Skills that are not linked. Their junctions are removed if present.
@@ -39,6 +45,7 @@ param(
     [switch]$DryRun,
     [switch]$SkipTools,
     [switch]$Update,
+    [switch]$Heimdall,
     [string[]]$ExcludeSkills = @('browser-control', 'diagnose-crash'),
     [string]$HomeDir = $env:USERPROFILE
 )
@@ -423,6 +430,14 @@ Test-ClaudeAgent
 $gitBash = 'C:\Program Files\Git\bin\bash.exe'
 if (-not (Test-Path -LiteralPath $gitBash)) {
     Write-Warning "Git Bash not found at $gitBash; shell-script skills (show-me-your-work, poteto-mode) need it"
+}
+
+if ($Heimdall) {
+    try {
+        & (Join-Path $PSScriptRoot 'heimdall.ps1') -DryRun:$DryRun -HomeDir $HomeDir
+    } catch {
+        Write-Warning "Heimdall was not installed: $($_.Exception.Message)"
+    }
 }
 
 Write-Host ''

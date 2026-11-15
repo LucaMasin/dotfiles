@@ -148,6 +148,7 @@ Setup clones `LucaMasin/heimdall` into `~/repos/heimdall` with `gh`, builds it w
 
 - `gh auth login` must have been done first, because the repo is private. Without it, setup prints a warning and skips heimdall; rerun `dot init` after authenticating.
 - `go` and `make` come from the platform packages. The repo's `go.mod` may need a newer Go than the package provides; Go downloads the required toolchain on first build, which needs network access.
+- On Windows, `dot init --heimdall` installs the agent as a service instead; see [windows.md](windows.md#heimdall-agent).
 - The agent only reports once the machine is logged into Tailscale (`sudo tailscale up --ssh`) and can reach `http://heimdall`. Until then the unit retries and logs failures at most once a minute.
 
 If the machine also runs `heimdall-server` (the server host), setup and upgrade install `server agent` together, because both share one binary and the server must not lag the agent's protocol. First-time server setup (Tailscale auth key in `/etc/heimdall/server.env`) is manual; see `docs/deployment.md` in the heimdall repo.
