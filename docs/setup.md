@@ -140,6 +140,26 @@ gh auth status
 
 Use the interactive prompts (GitHub.com, HTTPS, browser login). Credentials stay local, never in this repo. If scopes expire, run `gh auth refresh` or `gh auth login` again.
 
+## Heimdall agent
+
+`dot init` installs the agent of [Heimdall](https://github.com/LucaMasin/heimdall), a private fleet monitor that reports CPU, memory, disk, network and temperature stats to a server on the tailnet (`http://heimdall`). It runs on Ubuntu, Omarchy and Raspberry Pi OS with systemd, after Tailscale, and is skipped with a message otherwise (including `--skip-packages`).
+
+Setup clones `LucaMasin/heimdall` into `~/repos/heimdall` with `gh`, builds it with `make build-all`, and runs the repo's `scripts/install-local.sh agent`, which installs `/usr/local/bin/heimdall` and the `heimdall-agent` systemd unit with sudo. Requirements:
+
+- `gh auth login` must have been done first, because the repo is private. Without it, setup prints a warning and skips heimdall; rerun `dot init` after authenticating.
+- `go` and `make` come from the platform packages. The repo's `go.mod` may need a newer Go than the package provides; Go downloads the required toolchain on first build, which needs network access.
+- The agent only reports once the machine is logged into Tailscale (`sudo tailscale up --ssh`) and can reach `http://heimdall`. Until then the unit retries and logs failures at most once a minute.
+
+If the machine also runs `heimdall-server` (the server host), setup and upgrade install `server agent` together, because both share one binary and the server must not lag the agent's protocol. First-time server setup (Tailscale auth key in `/etc/heimdall/server.env`) is manual; see `docs/deployment.md` in the heimdall repo.
+
+`dot upgrade heimdall` pulls the repo, rebuilds, and reinstalls and restarts the units, unless `heimdall version` already matches the checkout (a rebuild restarts the server and clears its graph history). It skips when heimdall is not installed or `~/repos/heimdall` is missing. Check with:
+
+```bash
+systemctl is-active heimdall-agent
+heimdall version
+journalctl -u heimdall-agent -n 20
+```
+
 ## Browser automation
 
 Use the dedicated automation Chromium profile, not a personal browser. The launcher picks a Playwright Chromium when present and otherwise falls back to a system Chromium-family browser (`chromium`, `google-chrome-stable`, `brave-browser`), loads the unpacked extension, and keeps an isolated profile in `~/.browser-control/chromium`:

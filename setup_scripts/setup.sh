@@ -10,6 +10,8 @@ DESKTOP="none"
 CONFIGS=()
 NODE_MAJOR=24
 NEOVIM_REPOSITORY="https://github.com/neovim/neovim.git"
+HEIMDALL_REPOSITORY="LucaMasin/heimdall"
+HEIMDALL_DIR="$HOME/repos/heimdall"
 # Mirrors scripts/dotfiles.sh DEFAULT_CONFIGS so platform mixins below can
 # append machine-specific configs; tests assert both lists stay in sync.
 DEFAULT_SETUP_CONFIGS=(zsh nvim tmux herdr scripts agents opencode opencode-commands starship)
@@ -360,6 +362,7 @@ install_user_tools() {
   install_herdr
   install_tailscale
   enable_tailscaled
+  install_heimdall
 }
 
 install_yazi_from_snap() {
@@ -540,6 +543,62 @@ install_browser_control() {
   printf 'Load the unpacked extension from %s/extension/dist in your Chromium-family browser, then run `browser-control execute` to start the relay.\n' "$repo_dir"
 }
 
+# Heimdall's agent pushes host stats to the tailnet's heimdall server. The
+# repo is private, so cloning needs an authenticated gh; without one this
+# warns and skips instead of failing the whole setup.
+heimdall_prerequisites() {
+  # DOTFILES_SYSTEMD_DIR exists so tests can fake a systemd host.
+  if [[ ! -d ${DOTFILES_SYSTEMD_DIR:-/run/systemd/system} ]] || ! command -v systemctl >/dev/null 2>&1; then
+    printf 'heimdall: systemd is not running, skipping\n'
+    return 1
+  fi
+  local tool
+  for tool in go make; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      printf 'heimdall: %s not found, skipping (install it, then rerun)\n' "$tool"
+      return 1
+    fi
+  done
+}
+
+# Builds both architectures (cheap, static) and installs the binary and unit
+# with the repo's own script. A host that also runs the server gets both
+# components, because they share one binary and the server must not lag the
+# agent's wire protocol.
+build_install_heimdall() {
+  local components=agent
+  if systemctl cat heimdall-server.service >/dev/null 2>&1; then
+    components="server agent"
+  fi
+  run_shell 'build heimdall' "(cd '$HEIMDALL_DIR' && make build-all)"
+  run_shell "install heimdall ($components) and restart its units (sudo)" \
+    "(cd '$HEIMDALL_DIR' && scripts/install-local.sh $components)"
+}
+
+install_heimdall() {
+  if command -v heimdall >/dev/null 2>&1; then
+    printf 'heimdall already installed\n'
+    return 0
+  fi
+
+  printf 'Installing heimdall agent\n'
+  heimdall_prerequisites || return 0
+
+  if [[ ! -d $HEIMDALL_DIR/.git ]]; then
+    if [[ $DRY_RUN == false ]] && { ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; }; then
+      printf 'heimdall: gh is not authenticated (the repo is private); run `gh auth login`, then rerun dot init\n'
+      return 0
+    fi
+    run mkdir -p -- "$HOME/repos"
+    run_shell 'clone heimdall repo' "gh repo clone '$HEIMDALL_REPOSITORY' '$HEIMDALL_DIR'"
+  else
+    run_shell 'update heimdall repo' "git -C '$HEIMDALL_DIR' pull --ff-only"
+  fi
+
+  build_install_heimdall
+  printf 'The agent pushes to http://heimdall once this machine is logged into Tailscale (tailscale up --ssh).\n'
+}
+
 install_herdr() {
   if command -v herdr >/dev/null 2>&1; then
     printf 'herdr already installed\n'
@@ -576,6 +635,7 @@ install_omarchy_packages() {
   install_browser_control
   install_herdr
   enable_tailscaled
+  install_heimdall
 }
 
 install_raspberrypi_packages() {
@@ -671,6 +731,7 @@ install_pi_user_tools() {
   install_herdr
   install_tailscale
   enable_tailscaled
+  install_heimdall
 }
 
 install_yazi_from_deb() {

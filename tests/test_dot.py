@@ -508,7 +508,8 @@ fi''')
         self.run_dot("init", "--platform", "ubuntu", "--dry-run")
         self.assertEqual(self.snapshot(self.home), {})
 
-    def test_ai_tools_install_on_all_platforms_with_user_owned_prefix(self):
+    def mock_platform_install_tools(self):
+        """Mock everything `dot init --platform <any>` calls, except npm and heimdall."""
         for tool in ("starship", "zoxide", "uv", "yazi", "cargo", "tokei", "poetry",
                      "browser-control", "herdr", "make", "cmake", "curl", "wget", "gpg"):
             self.mock(tool, "exit 0")
@@ -528,6 +529,10 @@ exit 0
         self.mock("sudo", 'if [[ "$1" == tee ]]; then cat >/dev/null; fi')
         self.mock("omarchy", "exit 0")
         self.mock("git", 'if [[ "$1" == ls-remote ]]; then printf "abc\\trefs/tags/v0.11.0\\n"; fi')
+
+    def test_ai_tools_install_on_all_platforms_with_user_owned_prefix(self):
+        self.mock_platform_install_tools()
+        self.mock("heimdall", "exit 0")
         self.mock("npm", '''
 if [[ "$*" == "config get prefix" ]]; then
   if [[ -f "$HOME/npm-prefix" ]]; then cat "$HOME/npm-prefix"; else printf "/usr\\n"; fi
@@ -546,6 +551,93 @@ fi''')
                     "install -g @earendil-works/pi-coding-agent --ignore-scripts",
                     "install -g @anthropic-ai/claude-code --allow-scripts=@anthropic-ai/claude-code",
                 ])
+
+    def heimdall_fixture(self, server_unit=False):
+        """Mock heimdall's build prerequisites; `gh repo clone` copies a fake repo."""
+        template = self.base / "heimdall-template"
+        (template / ".git").mkdir(parents=True, exist_ok=True)
+        (template / "scripts").mkdir(exist_ok=True)
+        script = template / "scripts/install-local.sh"
+        script.write_text('#!/usr/bin/env bash\nprintf "install-local %s\\n" "$*" >> "$HOME/heimdall-calls"\n')
+        script.chmod(0o755)
+        self.env["DOTFILES_SYSTEMD_DIR"] = str(self.base)
+        self.mock("go", "exit 0")
+        # Neovim's build also calls make; only record heimdall's.
+        self.mock("make", 'if [[ "$*" == build-all ]]; then printf "make %s\\n" "$*" >> "$HOME/heimdall-calls"; fi')
+        self.mock("systemctl", "exit 0" if server_unit else "exit 1")
+        self.mock("gh", f'''
+if [[ "$1 $2" == "auth status" ]]; then exit 0; fi
+if [[ "$1 $2" == "repo clone" ]]; then
+  printf "gh repo clone %s\\n" "$3" >> "$HOME/heimdall-calls"
+  mkdir -p "$4" && cp -a "{template}/." "$4/"
+fi''')
+
+    def heimdall_calls(self):
+        return (self.home / "heimdall-calls").read_text().splitlines()
+
+    def test_init_clones_builds_and_installs_heimdall_agent(self):
+        self.mock_platform_install_tools()
+        self.heimdall_fixture()
+        self.run_dot("init", "--platform", "ubuntu", "--configs", "nvim", "--dry-run")
+        self.assertFalse((self.home / "heimdall-calls").exists())
+        for platform in ("ubuntu", "omarchy", "raspberrypi"):
+            with self.subTest(platform=platform):
+                shutil.rmtree(self.home / "repos", ignore_errors=True)
+                (self.home / "heimdall-calls").unlink(missing_ok=True)
+                self.run_dot("init", "--platform", platform, "--configs", "nvim")
+                self.assertEqual(self.heimdall_calls(), [
+                    "gh repo clone LucaMasin/heimdall", "make build-all", "install-local agent"])
+
+    def test_heimdall_install_adds_server_when_its_unit_exists(self):
+        self.mock_platform_install_tools()
+        self.heimdall_fixture(server_unit=True)
+        self.run_dot("init", "--platform", "ubuntu", "--configs", "nvim")
+        self.assertEqual(self.heimdall_calls()[-1], "install-local server agent")
+
+    def test_heimdall_install_skips_without_gh_auth_or_systemd_and_when_installed(self):
+        self.mock_platform_install_tools()
+        self.heimdall_fixture()
+        self.mock("gh", "exit 1")
+        output = self.run_dot("init", "--platform", "ubuntu", "--configs", "nvim")
+        self.assertIn("gh is not authenticated", output)
+        self.assertFalse((self.home / "repos/heimdall").exists())
+        self.heimdall_fixture()
+        self.env["DOTFILES_SYSTEMD_DIR"] = str(self.base / "missing")
+        self.assertIn("systemd is not running, skipping",
+                      self.run_dot("init", "--platform", "ubuntu", "--configs", "nvim"))
+        self.mock("heimdall", "exit 0")
+        self.env["DOTFILES_SYSTEMD_DIR"] = str(self.base)
+        self.assertIn("heimdall already installed", self.run_dot("init", "--platform", "ubuntu", "--configs", "nvim"))
+        self.assertFalse((self.home / "heimdall-calls").exists())
+
+    def heimdall_upgrade_fixture(self, installed, expected):
+        self.heimdall_fixture()
+        shutil.copytree(self.base / "heimdall-template", self.home / "repos/heimdall", dirs_exist_ok=True)
+        self.mock("heimdall", f'[[ "$1" == version ]] && printf "{installed}\\n"')
+        self.mock("git", f'''
+[[ "$1" == -C ]] && shift 2
+case "$1" in
+  pull) printf "git pull\\n" >> "$HOME/heimdall-calls" ;;
+  describe) printf "{expected}\\n" ;;
+esac''')
+
+    def test_upgrade_heimdall_rebuilds_only_when_version_changed(self):
+        self.heimdall_upgrade_fixture("v1", "v2")
+        self.run_dot("upgrade", "heimdall")
+        self.assertEqual(self.heimdall_calls(), ["git pull", "make build-all", "install-local agent"])
+        (self.home / "heimdall-calls").unlink()
+        self.heimdall_upgrade_fixture("v2", "v2")
+        self.assertIn("already up to date (v2)", self.run_dot("upgrade", "heimdall"))
+        self.assertEqual(self.heimdall_calls(), ["git pull"])
+
+    def test_upgrade_heimdall_dry_run_and_missing_install(self):
+        self.heimdall_upgrade_fixture("v1", "v2")
+        self.assertIn("dry-run: build heimdall", self.run_dot("upgrade", "--dry-run", "heimdall"))
+        self.assertFalse((self.home / "heimdall-calls").exists())
+        shutil.rmtree(self.home / "repos/heimdall")
+        self.assertIn("heimdall: repo not found", self.run_dot("upgrade", "heimdall"))
+        (self.bin / "heimdall").unlink()
+        self.assertIn("heimdall: not installed, skipping", self.run_dot("upgrade", "heimdall"))
 
     def test_existing_ai_tools_are_not_reinstalled(self):
         for tool in ("opencode", "pi", "claude"):

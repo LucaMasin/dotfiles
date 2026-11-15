@@ -107,7 +107,7 @@ _dot_complete() {
     case "$command" in
       apply) words="all $(dot list --names) --dry-run --force-disabled --help" ;;
       update) words="all $(dot list --names) --dry-run --skip-pull --configs --help" ;;
-      upgrade) words='opencode pi claude herdr starship zoxide uv tokei browser-control neovim --with --dry-run --help' ;;
+      upgrade) words='opencode pi claude herdr starship zoxide uv tokei browser-control heimdall neovim --with --dry-run --help' ;;
       init) words='--dry-run --platform --desktop --configs --skip-packages --help' ;;
       link|unlink) words='--dry-run --help' ;;
       completions) words='zsh bash --help' ;;
@@ -139,7 +139,7 @@ _dot_complete() {
         [[ $words[2] != apply ]] || compadd -- --force-disabled
         [[ $words[2] != update ]] || compadd -- --skip-pull --configs
         ;;
-      upgrade) compadd -- opencode pi claude herdr starship zoxide uv tokei browser-control neovim --with --dry-run --help ;;
+      upgrade) compadd -- opencode pi claude herdr starship zoxide uv tokei browser-control heimdall neovim --with --dry-run --help ;;
       init) compadd -- --dry-run --platform --desktop --configs --skip-packages --help ;;
       link|unlink) compadd -- --dry-run --help ;;
       completions) compadd -- zsh bash --help ;;

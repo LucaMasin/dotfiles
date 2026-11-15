@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=setup.sh
 source "$SCRIPT_DIR/setup.sh"
 
-DEFAULT_TOOLS=(npm pnpm opencode pi claude herdr starship zoxide uv tokei browser-control)
+DEFAULT_TOOLS=(npm pnpm opencode pi claude herdr starship zoxide uv tokei browser-control heimdall)
 OPT_IN_TOOLS=(neovim apt)
 
 usage() {
@@ -70,6 +70,34 @@ upgrade_browser_control() {
   hash -r 2>/dev/null || true
 }
 
+# The binary lives in /usr/local/bin (installed with sudo by the repo's own
+# script), so the generic "resolves under $HOME" check does not apply.
+upgrade_heimdall() {
+  local expected installed
+  if ! command -v heimdall >/dev/null 2>&1; then
+    printf 'heimdall: not installed, skipping (use dot init)\n'
+    return 0
+  fi
+  if [[ ! -d $HEIMDALL_DIR/.git ]]; then
+    printf 'heimdall: repo not found in %s, skipping\n' "$HEIMDALL_DIR"
+    return 0
+  fi
+  heimdall_prerequisites || return 0
+
+  run_shell 'update heimdall repo' "git -C '$HEIMDALL_DIR' pull --ff-only"
+  if [[ $DRY_RUN == false ]]; then
+    # Rebuilding restarts the units (and clears the server's graph history),
+    # so leave an up-to-date install alone.
+    expected="$(git -C "$HEIMDALL_DIR" describe --tags --always --dirty 2>/dev/null || true)"
+    installed="$(heimdall version 2>/dev/null || true)"
+    if [[ -n $expected && $installed == "$expected" ]]; then
+      printf 'heimdall: already up to date (%s)\n' "$expected"
+      return 0
+    fi
+  fi
+  build_install_heimdall
+}
+
 upgrade_apt() {
   local platform
   platform="$(detect_platform 2>/dev/null || true)"
@@ -103,6 +131,11 @@ upgrade_tool() {
 
   if [[ $tool == apt ]]; then
     upgrade_apt
+    return 0
+  fi
+
+  if [[ $tool == heimdall ]]; then
+    upgrade_heimdall
     return 0
   fi
 
