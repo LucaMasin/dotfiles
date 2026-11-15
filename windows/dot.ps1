@@ -13,19 +13,36 @@ Windows commands:
   update     Pull this checkout and deploy Windows agent configuration.
   upgrade    Upgrade installed Scoop-managed tools from windows/tools.txt,
              and the Heimdall agent when its service is installed.
+  heimdall   start|stop|restart|status: run the Heimdall agent service by hand.
+             It never starts by itself, and needs no administrator rights.
   help       Show this help.
 
 Options:
   --dry-run     Preview changes without writing.
   --skip-tools  Do not install Scoop tools (init and update only).
-  --heimdall    Also install the Heimdall agent service (init and update only).
-                Needs gh logged in and asks for administrator rights.
+  --heimdall    Also install the Heimdall agent service (init and update only),
+                set to manual start. Needs gh logged in and asks for
+                administrator rights once.
 
 Linux-specific dot commands are not supported on Windows.
 '@
 }
 
 if ($command -in @('help', '--help', '-h')) { Show-Usage; exit 0 }
+if ($command -eq 'heimdall') {
+    $action = if ($options.Count) { $options[0] } else { 'status' }
+    if ($options.Count -gt 1 -or $action -notin @('start', 'stop', 'restart', 'status')) {
+        [Console]::Error.WriteLine('dot: usage: dot heimdall start|stop|restart|status')
+        exit 1
+    }
+    $control = Join-Path $env:USERPROFILE 'repos\heimdall\scripts\heimdall-service.ps1'
+    if (-not (Test-Path -LiteralPath $control)) {
+        [Console]::Error.WriteLine('dot: heimdall is not installed. Run: dot init --heimdall')
+        exit 1
+    }
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $control $action
+    exit $LASTEXITCODE
+}
 if ($command -notin @('init', 'update', 'upgrade')) {
     [Console]::Error.WriteLine("dot: '$command' is not supported on Windows. Run 'dot help'.")
     exit 1

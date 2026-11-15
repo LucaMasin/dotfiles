@@ -27,7 +27,7 @@ Then connect its OpenCode integration, either in OpenCode Desktop under Settings
 opencode auth login claude-agent --standalone
 ```
 
-The setup also registers `dot` for PowerShell and Command Prompt. After opening a new terminal, use `dot init` to redeploy, `dot update` to pull and redeploy, or `dot upgrade` to update Scoop-managed tools listed in `windows/tools.txt`. Upgrade skips tools not installed with Scoop and does not update other Scoop apps or refresh buckets; run `scoop update` separately to refresh manifests. All three accept `--dry-run`; init and update also accept `--skip-tools` and `--heimdall`. `dot upgrade` also upgrades the Heimdall agent when its service is installed. `dot help` lists Windows commands. Linux-specific commands such as `dot apply` are not supported on Windows. Registration leaves an existing `dot` command or unmanaged shim alone and prints a warning instead. The shim points to this checkout; rerun setup if it moves.
+The setup also registers `dot` for PowerShell and Command Prompt. After opening a new terminal, use `dot init` to redeploy, `dot update` to pull and redeploy, or `dot upgrade` to update Scoop-managed tools listed in `windows/tools.txt`. Upgrade skips tools not installed with Scoop and does not update other Scoop apps or refresh buckets; run `scoop update` separately to refresh manifests. `dot heimdall start|stop|restart|status` controls the Heimdall service. All three accept `--dry-run`; init and update also accept `--skip-tools` and `--heimdall`. `dot upgrade` also upgrades the Heimdall agent when its service is installed. `dot help` lists Windows commands. Linux-specific commands such as `dot apply` are not supported on Windows. Registration leaves an existing `dot` command or unmanaged shim alone and prints a warning instead. The shim points to this checkout; rerun setup if it moves.
 
 | Option | Effect |
 | --- | --- |
@@ -70,9 +70,19 @@ The Sonnet alias has a 200,000-token context limit for automatic compaction. Wit
 
 ## Heimdall agent
 
-`dot init --heimdall` (or `setup.ps1 -Heimdall`) installs the agent of [Heimdall](https://github.com/LucaMasin/heimdall), a private fleet monitor, as the Windows service `heimdall-agent`. It is off by default because it installs a machine-wide service.
+`dot init --heimdall` (or `setup.ps1 -Heimdall`) installs the agent of [Heimdall](https://github.com/LucaMasin/heimdall), a private fleet monitor, as the Windows service `heimdall-agent`. The install is opt-in because it adds a machine-wide service.
 
-`windows/heimdall.ps1` clones `LucaMasin/heimdall` into `%USERPROFILE%\repos\heimdall` with `gh` (or runs `git pull --ff-only` when it exists), then runs the repo's `scripts\install-windows.ps1`. That script builds the agent with Go as you, then asks for administrator rights through UAC for the service steps only. It copies the binary to `C:\Program Files\Heimdall`, creates or repairs the service with automatic start and restart on failure, registers the Event Log source, and starts it. The agent logs to the Application event log under `heimdall-agent`.
+**The service never runs by itself.** It is installed with start type Manual, so it does not start at boot, and an install does not start it. You run it by hand and stop it when you leave the desk or unplug the laptop:
+
+```powershell
+dot heimdall start
+dot heimdall stop
+dot heimdall status
+```
+
+These need no administrator rights. The install grants your account start and stop rights on this one service. An upgrade restarts the service only if it was running. The agent polls `nvidia-smi`, which can keep a laptop's NVIDIA GPU awake, so leave it stopped on battery.
+
+`windows/heimdall.ps1` clones `LucaMasin/heimdall` into `%USERPROFILE%\repos\heimdall` with `gh` (or runs `git pull --ff-only` when it exists), then runs the repo's `scripts\install-windows.ps1`. That script builds the agent with Go as you, then asks for administrator rights through UAC for the service steps only. It copies the binary to `C:\Program Files\Heimdall`, creates or repairs the service with manual start and restart on failure, registers the Event Log source, and lets your account start and stop it. Pass `-Autostart` to the repo script if you want it at boot instead. The agent logs to the Application event log under `heimdall-agent`.
 
 - Run `gh auth login` first, because the repo is private. Without it, setup warns and skips Heimdall. Rerun `dot init --heimdall` after logging in.
 - `git`, `go` and `gh` must be on PATH. All three are in `windows/tools.txt`.
@@ -81,7 +91,7 @@ The Sonnet alias has a 200,000-token context limit for automatic compaction. Wit
 - With `-HomeDir`, a real run is skipped, because the service is machine-wide. Only `-DryRun` runs.
 - To remove it, run `powershell -ExecutionPolicy Bypass -File $HOME\repos\heimdall\scripts\install-windows.ps1 -Uninstall`.
 
-The agent only reports once the PC is logged into Tailscale and can reach `http://heimdall`. Check it with `Get-Service heimdall-agent`.
+The agent only reports once the PC is logged into Tailscale and can reach `http://heimdall`. Check it with `dot heimdall status`.
 
 ## Starship in PowerShell
 

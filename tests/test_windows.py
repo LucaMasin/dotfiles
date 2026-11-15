@@ -183,6 +183,29 @@ class WindowsDeploymentTests(unittest.TestCase):
             self.assertIn("only runs against the real home", result.stderr + result.stdout)
 
     @unittest.skipUnless(os.name == "nt", "requires Windows PowerShell")
+    def test_dot_heimdall_controls_the_service_through_the_repo_script(self):
+        with tempfile.TemporaryDirectory() as temp:
+            temp = Path(temp)
+            env = os.environ.copy()
+            env["USERPROFILE"] = str(temp)
+            command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                       str(WINDOWS / "dot.ps1"), "heimdall"]
+            missing = subprocess.run(command + ["start"], env=env, capture_output=True, text=True)
+            self.assertNotEqual(missing.returncode, 0)
+            self.assertIn("not installed", missing.stderr)
+            bad = subprocess.run(command + ["explode"], env=env, capture_output=True, text=True)
+            self.assertNotEqual(bad.returncode, 0)
+            self.assertIn("usage: dot heimdall", bad.stderr)
+            scripts = temp / "repos" / "heimdall" / "scripts"
+            scripts.mkdir(parents=True)
+            (scripts / "heimdall-service.ps1").write_text("param($Action)\nWrite-Host \"action=$Action\"\n")
+            ok = subprocess.run(command + ["stop"], env=env, capture_output=True, text=True)
+            self.assertEqual(ok.returncode, 0, ok.stderr)
+            self.assertIn("action=stop", ok.stdout)
+            default = subprocess.run(command, env=env, capture_output=True, text=True)
+            self.assertIn("action=status", default.stdout)
+
+    @unittest.skipUnless(os.name == "nt", "requires Windows PowerShell")
     def test_heimdall_flag_is_rejected_by_upgrade(self):
         result = subprocess.run(["powershell.exe", "-NoProfile", "-File", str(WINDOWS / "dot.ps1"),
                                  "upgrade", "--heimdall"], capture_output=True, text=True)
